@@ -7,7 +7,8 @@
     "dev": "pnpm --filter @jconv/web dev & pnpm --filter @jconv/api start:dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && pnpm test:planilha",
+    "test:planilha": "node --test scripts/importar-planilha.test.js",
     "db:migrate": "node scripts/migrar.js",
     "test:rls": "node scripts/executar-sql.js supabase/tests/cobertura-rls.test.sql",
     "db:seed": "node scripts/executar-sql.js scripts/seed.sql"

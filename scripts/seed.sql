@@ -19,8 +19,7 @@ INSERT INTO public.orgaos_concedentes (nome, esfera, parlamentar_padrinho) VALUE
 ON CONFLICT (LOWER(nome)) DO NOTHING;
 
 -- Bootstrap do primeiro Administrador:
--- 1. Crie o usuário no Supabase Auth (dashboard ou `supabase auth admin` /
---    `auth.users` via API) com o e-mail desejado.
--- 2. Rode scripts/promover-administrador.sql informando esse e-mail para vincular o papel
---    Administrador em public.usuarios (a tabela public.usuarios não pode ser criada direto por
---    SQL puro porque depende do id gerado pelo Supabase Auth em auth.users).
+-- Rode `node scripts/convidar-administrador.js <email> "<nome completo>"` — ele convida o
+-- usuário via Supabase Auth (o próprio define a senha pelo link recebido, nunca geramos/vemos
+-- a senha aqui) e já vincula o papel Administrador em public.usuarios. Não dá para fazer isso em
+-- SQL puro porque o id de public.usuarios depende do id gerado pelo Supabase Auth em auth.users.

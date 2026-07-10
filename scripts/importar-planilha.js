@@ -588,7 +588,20 @@ async function main() {
   console.log('\nGravado no banco:', gravados);
 }
 
-main().catch((erro) => {
-  console.error(erro);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((erro) => {
+    console.error(erro);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  limpar,
+  extrairDataTexto,
+  extrairValorTexto,
+  extrairPrimeiroPercentual,
+  extrairNumerosProcesso,
+  extrairEmpresa,
+  interpretarOrgao,
+  inferirStatusGeralConvenio,
+};

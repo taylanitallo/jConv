@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TIPOS_INSTRUMENTO, ROTULOS_TIPO_INSTRUMENTO, type Proposta } from '@jconv/compartilhado';
+import { BotaoFecharJanela } from '@jconv/compartilhado/componentes';
 import { propostasExtra } from '../../../../lib/api/recursos';
 
 export interface ModalPromoverPropostaProps {
@@ -52,7 +53,10 @@ export function ModalPromoverProposta({ proposta, aoFechar }: ModalPromoverPropo
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-900">
-        <h2 className="text-lg font-semibold">Promover proposta a Convênio</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold">Promover proposta a Convênio</h2>
+          <BotaoFecharJanela aoFechar={aoFechar} disabled={enviando} />
+        </div>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Objeto, protocolo/NUP e órgão são reaproveitados automaticamente da proposta. Preencha só os campos que
           só existem no Convênio.

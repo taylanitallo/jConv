@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { BotaoFecharJanela } from './BotaoFecharJanela';
 
 export interface ModalConfirmacaoProps {
   titulo: string;
@@ -34,9 +35,12 @@ export function ModalConfirmacao({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-900">
-        <h2 id="modal-confirmacao-titulo" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          {titulo}
-        </h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 id="modal-confirmacao-titulo" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            {titulo}
+          </h2>
+          <BotaoFecharJanela aoFechar={aoCancelar} disabled={confirmando} />
+        </div>
         <div className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">{mensagem}</div>
 
         <div className="mt-6 flex justify-end gap-3">
