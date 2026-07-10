@@ -1,0 +1,24 @@
+{
+  "name": "jconv",
+  "version": "0.1.0",
+  "private": true,
+  "description": "jConv — gestão de convênios, propostas, emendas parlamentares, obras e prestações de contas da Prefeitura de Irauçuba/CE",
+  "scripts": {
+    "dev": "pnpm --filter @jconv/web dev & pnpm --filter @jconv/api start:dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "db:migrate": "node scripts/migrar.js",
+    "test:rls": "node scripts/executar-sql.js supabase/tests/cobertura-rls.test.sql",
+    "db:seed": "node scripts/executar-sql.js scripts/seed.sql"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.110.2",
+    "dotenv": "^17.4.2",
+    "pg": "^8.22.0"
+  }
+}
