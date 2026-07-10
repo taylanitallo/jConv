@@ -6,3 +6,15 @@ export const esquemaLogin = z.object({
 });
 
 export type Login = z.infer<typeof esquemaLogin>;
+
+export const esquemaDefinirSenha = z
+  .object({
+    senha: z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres'),
+    confirmarSenha: z.string().min(1, 'Confirme a senha'),
+  })
+  .refine((dados) => dados.senha === dados.confirmarSenha, {
+    message: 'As senhas não coincidem',
+    path: ['confirmarSenha'],
+  });
+
+export type DefinirSenha = z.infer<typeof esquemaDefinirSenha>;

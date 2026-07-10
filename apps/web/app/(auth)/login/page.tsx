@@ -1,9 +1,19 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { esquemaLogin } from '@jconv/compartilhado';
 import { chamarApi, ErroApi } from '../../../lib/api/cliente';
+
+function AvisoSenhaDefinida() {
+  const parametros = useSearchParams();
+  if (parametros.get('senhaDefinida') !== '1') return null;
+  return (
+    <p className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
+      Senha definida com sucesso. Entre com seu e-mail e a nova senha.
+    </p>
+  );
+}
 
 export default function PaginaLogin() {
   const roteador = useRouter();
@@ -47,6 +57,10 @@ export default function PaginaLogin() {
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Entre com seu e-mail e senha cadastrados
         </p>
+
+        <Suspense fallback={null}>
+          <AvisoSenhaDefinida />
+        </Suspense>
 
         <div className="mt-6 space-y-4">
           <div>

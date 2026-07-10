@@ -19,7 +19,10 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email);
+  const urlFrontend = process.env.URL_FRONTEND || 'https://jconv-web.vercel.app';
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${urlFrontend}/definir-senha`,
+  });
   if (error) {
     console.error(`Erro ao convidar usuário: ${error.message}`);
     process.exit(1);
