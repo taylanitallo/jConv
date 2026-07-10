@@ -25,6 +25,7 @@ import { orgaosConcedentesApi } from '../../lib/api/recursos';
 import { usarAtualizacaoTempoReal } from '../../lib/supabase/usar-tempo-real';
 import { PALETA_CATEGORICA, CHROME_GRAFICO } from '../../lib/paleta';
 import { CartaoIndicador } from './_componentes/cartao-indicador';
+import { PainelAssistenteIa } from './_componentes/painel-assistente-ia';
 import { abrirRelatorioDashboard } from '../../lib/api/relatorios';
 
 interface DadosDashboard {
@@ -232,6 +233,10 @@ export default function PaginaDashboard() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <PainelAssistenteIa filtros={{ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus }} />
       </div>
     </div>
   );

@@ -36,4 +36,10 @@ export class ConfiguracaoService {
   get ambienteProducao(): boolean {
     return this.config.get<string>('NODE_ENV') === 'production';
   }
+
+  // Opcional de propósito (Fase 6): sem chave configurada, o IaModule responde 503 em vez de
+  // derrubar a API inteira — a camada de IA não é pré-requisito pras demais fases funcionarem.
+  get anthropicApiKey(): string | undefined {
+    return this.config.get<string>('ANTHROPIC_API_KEY');
+  }
 }

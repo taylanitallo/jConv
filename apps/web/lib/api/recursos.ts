@@ -67,6 +67,20 @@ export const aditivosApi = {
     chamarApi<{ sucesso: boolean }>(`/convenios/${convenioId}/aditivos/${id}`, { method: 'DELETE' }),
 };
 
+export const iaApi = {
+  perguntar: (pergunta: string) =>
+    chamarApi<{ resposta: string }>('/ia/perguntar', { method: 'POST', body: JSON.stringify({ pergunta }) }),
+  resumoConvenio: (convenioId: string) => chamarApi<{ resumo: string }>(`/ia/resumo/convenio/${convenioId}`),
+  resumoGeral: (filtros: Record<string, string | undefined>) => {
+    const params = new URLSearchParams(
+      Object.fromEntries(Object.entries(filtros).filter(([, v]) => !!v)) as Record<string, string>,
+    );
+    return chamarApi<{ resumo: string }>(`/ia/resumo/geral?${params.toString()}`);
+  },
+  extrairDocumento: (documentoId: string) =>
+    chamarApi<Record<string, unknown>>(`/ia/extrair-documento/${documentoId}`, { method: 'POST' }),
+};
+
 export const documentosAnexosApi = {
   listar: (filtro: { convenioId?: string; propostaId?: string; cessaoTerrenoId?: string }) => {
     const params = new URLSearchParams(filtro as Record<string, string>).toString();

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
 import { TIPOS_DOCUMENTO_ANEXO, ROTULOS_TIPO_DOCUMENTO_ANEXO, type DocumentoAnexo } from '@jconv/compartilhado';
-import { documentosAnexosApi } from '../../../../lib/api/recursos';
+import { documentosAnexosApi, iaApi } from '../../../../lib/api/recursos';
+import { ErroApi } from '../../../../lib/api/cliente';
 import { criarClienteSupabaseNavegador } from '../../../../lib/supabase/cliente-navegador';
 
 export function AbaDocumentos({ convenioId }: { convenioId: string }) {
@@ -13,6 +14,8 @@ export function AbaDocumentos({ convenioId }: { convenioId: string }) {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [paraExcluir, setParaExcluir] = useState<DocumentoAnexo | null>(null);
+  const [extraindoId, setExtraindoId] = useState<string | null>(null);
+  const [sugestao, setSugestao] = useState<{ documentoId: string; dados: Record<string, unknown> } | null>(null);
   const inputArquivoRef = useRef<HTMLInputElement>(null);
 
   async function carregar() {
@@ -53,6 +56,24 @@ export function AbaDocumentos({ convenioId }: { convenioId: string }) {
     window.open(url, '_blank');
   }
 
+  async function sugerirExtracao(documento: DocumentoAnexo) {
+    setErro(null);
+    setExtraindoId(documento.id);
+    setSugestao(null);
+    try {
+      const dados = await iaApi.extrairDocumento(documento.id);
+      setSugestao({ documentoId: documento.id, dados });
+    } catch (excecao) {
+      if (excecao instanceof ErroApi && excecao.status === 503) {
+        setErro('Assistente de IA ainda não configurado neste ambiente.');
+      } else {
+        setErro(excecao instanceof Error ? excecao.message : 'Erro ao extrair dados do documento');
+      }
+    } finally {
+      setExtraindoId(null);
+    }
+  }
+
   async function excluir() {
     if (!paraExcluir) return;
     await documentosAnexosApi.excluir(paraExcluir.id);
@@ -80,6 +101,17 @@ export function AbaDocumentos({ convenioId }: { convenioId: string }) {
 
       {erro && <p className="mb-3 text-sm text-red-600">{erro}</p>}
 
+      {sugestao && (
+        <div className="mb-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-xs dark:border-blue-900 dark:bg-blue-950">
+          <p className="mb-1 font-medium text-blue-900 dark:text-blue-200">
+            Sugestão de dados extraídos pela IA (confira antes de lançar manualmente em Medições/Repasses):
+          </p>
+          <pre className="whitespace-pre-wrap text-blue-800 dark:text-blue-300">
+            {JSON.stringify(sugestao.dados, null, 2)}
+          </pre>
+        </div>
+      )}
+
       {carregando ? (
         <p className="text-sm text-neutral-500">Carregando…</p>
       ) : (
@@ -99,6 +131,13 @@ export function AbaDocumentos({ convenioId }: { convenioId: string }) {
                 <td className="px-3 py-2">{ROTULOS_TIPO_DOCUMENTO_ANEXO[d.tipo]}</td>
                 <td className="px-3 py-2">{new Date(d.dataUpload).toLocaleDateString('pt-BR')}</td>
                 <td className="px-3 py-2 text-right">
+                  <button
+                    onClick={() => sugerirExtracao(d)}
+                    disabled={extraindoId === d.id}
+                    className="mr-3 text-blue-600 hover:underline disabled:opacity-50"
+                  >
+                    {extraindoId === d.id ? 'Extraindo…' : 'Sugerir extração (IA)'}
+                  </button>
                   <button onClick={() => baixar(d)} className="mr-3 text-blue-600 hover:underline">
                     Baixar
                   </button>

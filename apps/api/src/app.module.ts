@@ -13,6 +13,7 @@ import { DocumentosAnexosModule } from './modulos/documentos-anexos/documentos-a
 import { DashboardModule } from './modulos/dashboard/dashboard.module';
 import { AlertasModule } from './modulos/alertas/alertas.module';
 import { RelatoriosModule } from './modulos/relatorios/relatorios.module';
+import { IaModule } from './modulos/ia/ia.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RelatoriosModule } from './modulos/relatorios/relatorios.module';
     DashboardModule,
     AlertasModule,
     RelatoriosModule,
+    IaModule,
   ],
 })
 export class AppModule {}
