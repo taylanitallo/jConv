@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { obterUsuarioAtual } from '../../lib/api/servidor';
 import { BotaoSair } from './_componentes/botao-sair';
+import { NavegacaoLateral } from './_componentes/navegacao-lateral';
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const usuario = await obterUsuarioAtual();
@@ -18,7 +19,10 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
           <BotaoSair />
         </div>
       </header>
-      <main className="flex-1 p-6">{children}</main>
+      <div className="flex flex-1">
+        <NavegacaoLateral />
+        <main className="flex-1 p-6">{children}</main>
+      </div>
     </div>
   );
 }
