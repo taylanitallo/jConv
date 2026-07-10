@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "pnpm --filter @jconv/api build"
+    "buildCommand": "pnpm --filter @jconv/compartilhado build && pnpm --filter @jconv/api build"
   },
   "deploy": {
     "startCommand": "pnpm --filter @jconv/api start:prod",

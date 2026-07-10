@@ -2,13 +2,20 @@
   "name": "@jconv/compartilhado",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./componentes": "./src/componentes/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./componentes": {
+      "types": "./dist/componentes/index.d.ts",
+      "default": "./dist/componentes/index.js"
+    }
   },
   "scripts": {
+    "build": "tsc",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "echo \"(sem testes ainda)\""
   },
