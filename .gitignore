@@ -57,3 +57,5 @@ supabase/.env
 # Temporary files
 *.tmp
 .cache/
+
+.vercel
