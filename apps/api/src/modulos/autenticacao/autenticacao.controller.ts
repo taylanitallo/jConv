@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpCode, Post, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { esquemaLogin } from '@jconv/compartilhado';
 import { AutenticacaoService } from './autenticacao.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -52,5 +52,14 @@ export class AutenticacaoController {
   @UseGuards(AutenticacaoGuard)
   eu(@UsuarioAtual() usuario: { id: string; email: string }) {
     return { usuario };
+  }
+
+  // Exposto só para o Supabase Realtime autenticar o canal do navegador (Fase 4 — Dashboard em
+  // tempo real). É o mesmo access_token já usado no cookie httpOnly; consultas normais de
+  // dados de negócio continuam passando pela API, nunca direto do navegador pro Supabase.
+  @Get('token-realtime')
+  @UseGuards(AutenticacaoGuard)
+  tokenRealtime(@Req() requisicao: Request) {
+    return { accessToken: requisicao.cookies[NOME_COOKIE_ACCESS_TOKEN] };
   }
 }
