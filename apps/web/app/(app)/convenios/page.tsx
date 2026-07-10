@@ -13,6 +13,7 @@ import {
 } from '@jconv/compartilhado';
 import { chamarApi } from '../../../lib/api/cliente';
 import { orgaosConcedentesApi } from '../../../lib/api/recursos';
+import { abrirRelatorioConsolidado } from '../../../lib/api/relatorios';
 
 function formatarMoeda(valor: number | null) {
   if (valor == null) return '—';
@@ -62,12 +63,21 @@ export default function PaginaConvenios() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Convênios</h1>
-        <Link
-          href="/convenios/novo"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Novo convênio
-        </Link>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => abrirRelatorioConsolidado({ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus })}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          >
+            Exportar PDF
+          </button>
+          <Link
+            href="/convenios/novo"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Novo convênio
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-3">

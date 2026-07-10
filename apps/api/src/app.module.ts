@@ -12,6 +12,7 @@ import { LimitesCusteioModule } from './modulos/limites-custeio/limites-custeio.
 import { DocumentosAnexosModule } from './modulos/documentos-anexos/documentos-anexos.module';
 import { DashboardModule } from './modulos/dashboard/dashboard.module';
 import { AlertasModule } from './modulos/alertas/alertas.module';
+import { RelatoriosModule } from './modulos/relatorios/relatorios.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AlertasModule } from './modulos/alertas/alertas.module';
     DocumentosAnexosModule,
     DashboardModule,
     AlertasModule,
+    RelatoriosModule,
   ],
 })
 export class AppModule {}

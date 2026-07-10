@@ -10,6 +10,7 @@ import { AbaMedicoes } from '../_componentes/aba-medicoes';
 import { AbaRepasses } from '../_componentes/aba-repasses';
 import { AbaAditivos } from '../_componentes/aba-aditivos';
 import { AbaDocumentos } from '../_componentes/aba-documentos';
+import { abrirRelatorioConvenio } from '../../../../lib/api/relatorios';
 
 const ABAS = ['Dados Gerais', 'Medições', 'Repasses', 'Aditivos', 'Documentos'] as const;
 
@@ -42,13 +43,22 @@ export default function PaginaEditarConvenio() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Convênio nº {convenio.numeroSequencial}</h1>
-        <button
-          type="button"
-          onClick={() => setConfirmandoExclusao(true)}
-          className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
-        >
-          Excluir convênio
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => abrirRelatorioConvenio(convenio.id)}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          >
+            Exportar PDF
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmandoExclusao(true)}
+            className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
+          >
+            Excluir convênio
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 flex gap-1 border-b border-neutral-200 dark:border-neutral-800">

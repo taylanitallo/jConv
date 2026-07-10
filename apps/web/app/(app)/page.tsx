@@ -25,6 +25,7 @@ import { orgaosConcedentesApi } from '../../lib/api/recursos';
 import { usarAtualizacaoTempoReal } from '../../lib/supabase/usar-tempo-real';
 import { PALETA_CATEGORICA, CHROME_GRAFICO } from '../../lib/paleta';
 import { CartaoIndicador } from './_componentes/cartao-indicador';
+import { abrirRelatorioDashboard } from '../../lib/api/relatorios';
 
 interface DadosDashboard {
   indicadores: {
@@ -96,11 +97,20 @@ export default function PaginaDashboard() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        {atualizadoEm && (
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
-            Atualizado às {atualizadoEm.toLocaleTimeString('pt-BR')}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {atualizadoEm && (
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              Atualizado às {atualizadoEm.toLocaleTimeString('pt-BR')}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => abrirRelatorioDashboard({ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus })}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          >
+            Exportar PDF
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 flex flex-wrap gap-3">
