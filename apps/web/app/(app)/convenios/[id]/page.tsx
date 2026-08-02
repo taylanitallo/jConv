@@ -12,6 +12,7 @@ import { AbaRepasses } from '../_componentes/aba-repasses';
 import { AbaAditivos } from '../_componentes/aba-aditivos';
 import { AbaDocumentos } from '../_componentes/aba-documentos';
 import { AbaHistorico } from '../_componentes/aba-historico';
+import { ModalOrientacaoPdf } from '../../_componentes/modal-orientacao-pdf';
 import { abrirRelatorioConvenio } from '../../../../lib/api/relatorios';
 
 const ABAS = ['Dados Gerais', 'Medições', 'Repasses', 'Aditivos', 'Documentos', 'Histórico'] as const;
@@ -26,6 +27,7 @@ export default function PaginaEditarConvenio() {
   const [resumoIa, setResumoIa] = useState<string | null>(null);
   const [gerandoResumo, setGerandoResumo] = useState(false);
   const [erroResumo, setErroResumo] = useState<string | null>(null);
+  const [escolhendoOrientacao, setEscolhendoOrientacao] = useState(false);
 
   useEffect(() => {
     convenioApi.obter(id).then(setConvenio);
@@ -76,7 +78,7 @@ export default function PaginaEditarConvenio() {
           </button>
           <button
             type="button"
-            onClick={() => abrirRelatorioConvenio(convenio.id)}
+            onClick={() => setEscolhendoOrientacao(true)}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
           >
             Exportar PDF
@@ -120,6 +122,17 @@ export default function PaginaEditarConvenio() {
       {aba === 'Aditivos' && <AbaAditivos convenioId={convenio.id} />}
       {aba === 'Documentos' && <AbaDocumentos convenioId={convenio.id} />}
       {aba === 'Histórico' && <AbaHistorico convenioId={convenio.id} />}
+
+      {escolhendoOrientacao && (
+        <ModalOrientacaoPdf
+          titulo={`Exportar Convênio nº ${convenio.numeroSequencial}`}
+          aoFechar={() => setEscolhendoOrientacao(false)}
+          aoConfirmar={(orientacao) => {
+            setEscolhendoOrientacao(false);
+            abrirRelatorioConvenio(convenio.id, orientacao);
+          }}
+        />
+      )}
 
       {confirmandoExclusao && (
         <ModalConfirmacaoExclusao

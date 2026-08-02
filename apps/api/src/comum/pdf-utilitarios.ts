@@ -29,8 +29,20 @@ export function formatarDataHora(dataHora: string | null | undefined) {
   });
 }
 
-export function criarDocumento(titulo: string, subtitulo?: string): PDFKit.PDFDocument {
-  const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
+export const ORIENTACOES_PDF = ['retrato', 'paisagem'] as const;
+export type OrientacaoPdf = (typeof ORIENTACOES_PDF)[number];
+
+export function criarDocumento(
+  titulo: string,
+  subtitulo?: string,
+  orientacao: OrientacaoPdf = 'retrato',
+): PDFKit.PDFDocument {
+  const doc = new PDFDocument({
+    size: 'A4',
+    layout: orientacao === 'paisagem' ? 'landscape' : 'portrait',
+    margin: 40,
+    bufferPages: true,
+  });
 
   doc.fillColor(COR_PRIMARIA).fontSize(18).text('jConv', { continued: false });
   doc.fillColor('#000000').fontSize(14).text(titulo, { paragraphGap: 2 });
@@ -49,9 +61,17 @@ export function criarDocumento(titulo: string, subtitulo?: string): PDFKit.PDFDo
 
 export interface ColunaTabela {
   rotulo: string;
+  /** Peso relativo da coluna, não medida absoluta: as larguras são normalizadas para preencher
+   *  a página, então a mesma definição serve em retrato e em paisagem. */
   largura: number;
   alinhar?: 'left' | 'right' | 'center';
 }
+
+const RECUO_CELULA_X = 4;
+const RECUO_CELULA_Y = 5;
+const ALTURA_MINIMA_LINHA = 20;
+const FONTE_CABECALHO = 9;
+const FONTE_CORPO = 8.5;
 
 // Renderizador de tabela mínimo (pdfkit não tem tabela nativa) — reaproveitado por todos os
 // relatórios: cabeçalho com fundo, linhas zebradas, quebra de página automática.
@@ -62,43 +82,64 @@ export function desenharTabela(
 ) {
   const margemEsquerda = doc.page.margins.left;
   const larguraUtil = doc.page.width - margemEsquerda - doc.page.margins.right;
-  const alturaLinha = 20;
+
+  // Normaliza as larguras declaradas para a largura real da página. Sem isso, a tabela ficaria
+  // com um vão à direita em paisagem (as larguras foram escritas pensando no A4 em pé).
+  const somaDeclarada = colunas.reduce((total, coluna) => total + coluna.largura, 0);
+  const larguras = colunas.map((coluna) => (coluna.largura / somaDeclarada) * larguraUtil);
+
+  // Altura calculada a partir do texto que de fato vai ser desenhado. Com altura fixa, uma
+  // célula longa (ex.: "Objeto") quebrava em várias linhas e invadia a linha seguinte.
+  function alturaNecessaria(valores: (string | number)[], tamanhoFonte: number) {
+    doc.fontSize(tamanhoFonte);
+    const maiorAltura = valores.reduce<number>((maior, valor, i) => {
+      const altura = doc.heightOfString(String(valor), { width: larguras[i] - RECUO_CELULA_X * 2 });
+      return Math.max(maior, altura);
+    }, 0);
+    return Math.max(ALTURA_MINIMA_LINHA, maiorAltura + RECUO_CELULA_Y * 2);
+  }
+
+  function desenharLinha(valores: (string | number)[], y: number, altura: number, tamanhoFonte: number) {
+    doc.fontSize(tamanhoFonte);
+    let x = margemEsquerda;
+    valores.forEach((valor, i) => {
+      doc.text(String(valor), x + RECUO_CELULA_X, y + RECUO_CELULA_Y, {
+        width: larguras[i] - RECUO_CELULA_X * 2,
+        align: colunas[i].alinhar ?? 'left',
+      });
+      x += larguras[i];
+    });
+  }
 
   function desenharCabecalho() {
+    const rotulos = colunas.map((coluna) => coluna.rotulo);
+    const altura = alturaNecessaria(rotulos, FONTE_CABECALHO);
     const y = doc.y;
-    doc.rect(margemEsquerda, y, larguraUtil, alturaLinha).fill(COR_PRIMARIA);
-    doc.fillColor('#ffffff').fontSize(9);
-    let x = margemEsquerda;
-    for (const coluna of colunas) {
-      doc.text(coluna.rotulo, x + 4, y + 6, { width: coluna.largura - 8, align: coluna.alinhar ?? 'left' });
-      x += coluna.largura;
-    }
+    doc.rect(margemEsquerda, y, larguraUtil, altura).fill(COR_PRIMARIA);
+    doc.fillColor('#ffffff');
+    desenharLinha(rotulos, y, altura, FONTE_CABECALHO);
     doc.fillColor('#000000');
-    doc.y = y + alturaLinha;
+    doc.y = y + altura;
   }
 
   desenharCabecalho();
 
   linhas.forEach((linha, indice) => {
-    if (doc.y + alturaLinha > doc.page.height - doc.page.margins.bottom) {
+    const altura = alturaNecessaria(linha, FONTE_CORPO);
+
+    if (doc.y + altura > doc.page.height - doc.page.margins.bottom) {
       doc.addPage();
       desenharCabecalho();
     }
 
     const y = doc.y;
     if (indice % 2 === 1) {
-      doc.rect(margemEsquerda, y, larguraUtil, alturaLinha).fill('#f5f5f4');
+      doc.rect(margemEsquerda, y, larguraUtil, altura).fill('#f5f5f4');
       doc.fillColor('#000000');
     }
 
-    let x = margemEsquerda;
-    doc.fontSize(8.5);
-    linha.forEach((valor, i) => {
-      const coluna = colunas[i];
-      doc.text(String(valor), x + 4, y + 5, { width: coluna.largura - 8, align: coluna.alinhar ?? 'left' });
-      x += coluna.largura;
-    });
-    doc.y = y + alturaLinha;
+    desenharLinha(linha, y, altura, FONTE_CORPO);
+    doc.y = y + altura;
   });
 
   doc.moveDown(1);

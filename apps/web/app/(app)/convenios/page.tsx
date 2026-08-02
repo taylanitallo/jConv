@@ -14,6 +14,7 @@ import {
 import { chamarApi } from '../../../lib/api/cliente';
 import { orgaosConcedentesApi } from '../../../lib/api/recursos';
 import { abrirRelatorioConsolidado } from '../../../lib/api/relatorios';
+import { ModalOrientacaoPdf } from '../_componentes/modal-orientacao-pdf';
 
 function formatarMoeda(valor: number | null) {
   if (valor == null) return '—';
@@ -34,6 +35,7 @@ export default function PaginaConvenios() {
   const [filtroEsfera, setFiltroEsfera] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('');
   const [filtroOrgao, setFiltroOrgao] = useState('');
+  const [escolhendoOrientacao, setEscolhendoOrientacao] = useState(false);
 
   async function carregar() {
     setCarregando(true);
@@ -66,7 +68,7 @@ export default function PaginaConvenios() {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => abrirRelatorioConsolidado({ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus })}
+            onClick={() => setEscolhendoOrientacao(true)}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
           >
             Exportar PDF
@@ -120,6 +122,21 @@ export default function PaginaConvenios() {
           ))}
         </select>
       </div>
+
+      {escolhendoOrientacao && (
+        <ModalOrientacaoPdf
+          titulo="Exportar relatório consolidado"
+          padrao="paisagem"
+          aoFechar={() => setEscolhendoOrientacao(false)}
+          aoConfirmar={(orientacao) => {
+            setEscolhendoOrientacao(false);
+            abrirRelatorioConsolidado(
+              { esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus },
+              orientacao,
+            );
+          }}
+        />
+      )}
 
       {carregando ? (
         <p className="text-sm text-neutral-500">Carregando…</p>

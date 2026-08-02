@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { ObservacaoConvenio } from '@jconv/compartilhado';
 import { observacoesApi } from '../../../../lib/api/recursos';
 import { abrirRelatorioHistoricoConvenio } from '../../../../lib/api/relatorios';
+import { ModalOrientacaoPdf } from '../../_componentes/modal-orientacao-pdf';
 
 function formatarDataHora(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', {
@@ -21,6 +22,7 @@ export function AbaHistorico({ convenioId }: { convenioId: string }) {
   const [texto, setTexto] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [escolhendoOrientacao, setEscolhendoOrientacao] = useState(false);
 
   async function carregar() {
     setCarregando(true);
@@ -86,7 +88,7 @@ export function AbaHistorico({ convenioId }: { convenioId: string }) {
         <div className="flex gap-2 print:hidden">
           <button
             type="button"
-            onClick={() => abrirRelatorioHistoricoConvenio(convenioId)}
+            onClick={() => setEscolhendoOrientacao(true)}
             className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
           >
             Exportar PDF
@@ -100,6 +102,17 @@ export function AbaHistorico({ convenioId }: { convenioId: string }) {
           </button>
         </div>
       </div>
+
+      {escolhendoOrientacao && (
+        <ModalOrientacaoPdf
+          titulo="Exportar histórico do convênio"
+          aoFechar={() => setEscolhendoOrientacao(false)}
+          aoConfirmar={(orientacao) => {
+            setEscolhendoOrientacao(false);
+            abrirRelatorioHistoricoConvenio(convenioId, orientacao);
+          }}
+        />
+      )}
 
       {carregando ? (
         <p className="text-sm text-neutral-500">Carregando…</p>

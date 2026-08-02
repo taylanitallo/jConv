@@ -19,6 +19,7 @@ import {
   formatarDataHora,
   formatarMoeda,
   COR_PRIMARIA,
+  type OrientacaoPdf,
 } from '../../comum/pdf-utilitarios';
 import { DashboardService, FiltrosDashboard } from '../dashboard/dashboard.service';
 
@@ -26,7 +27,11 @@ import { DashboardService, FiltrosDashboard } from '../dashboard/dashboard.servi
 export class RelatoriosService {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  async relatorioConvenio(cliente: SupabaseClient, convenioId: string): Promise<PDFKit.PDFDocument> {
+  async relatorioConvenio(
+    cliente: SupabaseClient,
+    convenioId: string,
+    orientacao: OrientacaoPdf = 'retrato',
+  ): Promise<PDFKit.PDFDocument> {
     const convenio = desembrulhar(await cliente.from('convenios').select('*').eq('id', convenioId).single()) as Record<
       string,
       any
@@ -46,6 +51,7 @@ export class RelatoriosService {
     const doc = criarDocumento(
       `Convênio nº ${convenio.numero_sequencial}`,
       `${orgao.data?.nome ?? ''} — ${ROTULOS_ESFERA_CONVENIO[convenio.esfera as EsferaConvenio]}`,
+      orientacao,
     );
 
     doc.fontSize(11).text('Objeto', { underline: true });
@@ -134,7 +140,11 @@ export class RelatoriosService {
     return doc;
   }
 
-  async relatorioHistoricoConvenio(cliente: SupabaseClient, convenioId: string): Promise<PDFKit.PDFDocument> {
+  async relatorioHistoricoConvenio(
+    cliente: SupabaseClient,
+    convenioId: string,
+    orientacao: OrientacaoPdf = 'retrato',
+  ): Promise<PDFKit.PDFDocument> {
     const convenio = desembrulhar(
       await cliente.from('convenios').select('numero_sequencial, objeto, esfera, orgao_concedente_id').eq('id', convenioId).single(),
     ) as Record<string, any>;
@@ -148,6 +158,7 @@ export class RelatoriosService {
     const doc = criarDocumento(
       `Histórico do Convênio nº ${convenio.numero_sequencial}`,
       `${orgao.data?.nome ?? ''} — ${ROTULOS_ESFERA_CONVENIO[convenio.esfera as EsferaConvenio]}`,
+      orientacao,
     );
 
     doc.fontSize(11).text('Objeto', { underline: true });
@@ -174,7 +185,12 @@ export class RelatoriosService {
     return doc;
   }
 
-  async relatorioConvenios(cliente: SupabaseClient, filtros: FiltrosDashboard, titulo: string): Promise<PDFKit.PDFDocument> {
+  async relatorioConvenios(
+    cliente: SupabaseClient,
+    filtros: FiltrosDashboard,
+    titulo: string,
+    orientacao: OrientacaoPdf = 'retrato',
+  ): Promise<PDFKit.PDFDocument> {
     let consulta = cliente
       .from('convenios')
       .select('numero_sequencial, orgao_concedente_id, esfera, objeto, valor_conveniado, valor_concedido, status_geral, data_assinatura')
@@ -195,7 +211,7 @@ export class RelatoriosService {
     const totalConveniado = convenios.reduce((acc, c) => acc + (c.valor_conveniado ?? 0), 0);
     const totalConcedido = convenios.reduce((acc, c) => acc + (c.valor_concedido ?? 0), 0);
 
-    const doc = criarDocumento(titulo, `${convenios.length} convênio(s) encontrado(s)`);
+    const doc = criarDocumento(titulo, `${convenios.length} convênio(s) encontrado(s)`, orientacao);
 
     doc.fontSize(10).fillColor(COR_PRIMARIA).text(`Total conveniado: ${formatarMoeda(totalConveniado)}`);
     doc.fillColor('#000000').text(`Total concedido: ${formatarMoeda(totalConcedido)}`);
@@ -223,10 +239,18 @@ export class RelatoriosService {
     return doc;
   }
 
-  async relatorioDashboard(cliente: SupabaseClient, filtros: FiltrosDashboard): Promise<PDFKit.PDFDocument> {
+  async relatorioDashboard(
+    cliente: SupabaseClient,
+    filtros: FiltrosDashboard,
+    orientacao: OrientacaoPdf = 'retrato',
+  ): Promise<PDFKit.PDFDocument> {
     const dados = await this.dashboardService.obterDados(cliente, filtros);
 
-    const doc = criarDocumento('Snapshot do Dashboard', 'Indicadores no estado atual dos filtros aplicados');
+    const doc = criarDocumento(
+      'Snapshot do Dashboard',
+      'Indicadores no estado atual dos filtros aplicados',
+      orientacao,
+    );
 
     const cartoes: [string, string][] = [
       ['Total conveniado', formatarMoeda(dados.indicadores.totalConveniado)],

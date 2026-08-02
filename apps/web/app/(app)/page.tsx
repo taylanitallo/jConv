@@ -30,6 +30,7 @@ import {
   type ColunaDetalhe,
   type ConvenioDetalhado,
 } from './_componentes/modal-detalhe-indicador';
+import { ModalOrientacaoPdf } from './_componentes/modal-orientacao-pdf';
 import { PainelAssistenteIa } from './_componentes/painel-assistente-ia';
 import { abrirRelatorioDashboard } from '../../lib/api/relatorios';
 
@@ -164,6 +165,7 @@ export default function PaginaDashboard() {
   const [dados, setDados] = useState<DadosDashboard | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
   const [indicadorAberto, setIndicadorAberto] = useState<ChaveIndicador | null>(null);
+  const [escolhendoOrientacao, setEscolhendoOrientacao] = useState(false);
 
   const carregar = useCallback(async () => {
     const params = new URLSearchParams();
@@ -220,7 +222,7 @@ export default function PaginaDashboard() {
           )}
           <button
             type="button"
-            onClick={() => abrirRelatorioDashboard({ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus })}
+            onClick={() => setEscolhendoOrientacao(true)}
             className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
           >
             Exportar PDF
@@ -355,6 +357,20 @@ export default function PaginaDashboard() {
       <div className="mt-6">
         <PainelAssistenteIa filtros={{ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus }} />
       </div>
+
+      {escolhendoOrientacao && (
+        <ModalOrientacaoPdf
+          titulo="Exportar Dashboard"
+          aoFechar={() => setEscolhendoOrientacao(false)}
+          aoConfirmar={(orientacao) => {
+            setEscolhendoOrientacao(false);
+            abrirRelatorioDashboard(
+              { esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus },
+              orientacao,
+            );
+          }}
+        />
+      )}
 
       {definicaoAberta && (
         <ModalDetalheIndicador
