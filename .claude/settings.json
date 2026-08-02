@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,3001,3333,4000,8080 } | Select-Object LocalPort, OwningProcess | Sort-Object LocalPort -Unique)",
+      "PowerShell(Get-Process -Id 24232,25668 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=24232 or ProcessId=25668\" | Select-Object ProcessId, @{n='Cmd';e={$_.CommandLine}}, @{n='Cwd';e={$_.ExecutablePath}} | Format-List)",
+      "PowerShell(Stop-Process -Id 24232,25668 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 800; Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,3001,3333 } | Select-Object LocalPort, OwningProcess)"
+    ]
+  }
+}
