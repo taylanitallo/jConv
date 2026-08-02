@@ -1,10 +1,26 @@
 import { redirect } from 'next/navigation';
-import { obterUsuarioAtual } from '../../lib/api/servidor';
+import { ErroApiIndisponivel, obterUsuarioAtual } from '../../lib/api/servidor';
+import { AvisoApiIndisponivel } from './_componentes/aviso-api-indisponivel';
 import { BotaoSair } from './_componentes/botao-sair';
 import { NavegacaoLateral } from './_componentes/navegacao-lateral';
 
+// Toda a área autenticada lê o cookie de sessão: nunca é pré-renderizada.
+export const dynamic = 'force-dynamic';
+
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
-  const usuario = await obterUsuarioAtual();
+  let usuario;
+
+  // Tratado aqui, e não por um error.tsx: um error boundary não captura o que é lançado pelo
+  // layout do próprio segmento, e o da raiz também não pega este caso — verificado em produção,
+  // onde a página caía no fallback interno do Next (<html id="__next_error__">).
+  try {
+    usuario = await obterUsuarioAtual();
+  } catch (erro) {
+    if (erro instanceof ErroApiIndisponivel) {
+      return <AvisoApiIndisponivel detalhe={erro.message} />;
+    }
+    throw erro;
+  }
 
   if (!usuario) {
     redirect('/login');
