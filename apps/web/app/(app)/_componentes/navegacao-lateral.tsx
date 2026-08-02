@@ -18,7 +18,7 @@ export function NavegacaoLateral() {
   const caminhoAtual = usePathname();
 
   return (
-    <nav className="w-56 shrink-0 border-r border-neutral-200 p-4 dark:border-neutral-800">
+    <nav className="w-56 shrink-0 border-r border-neutral-200 p-4 print:hidden dark:border-neutral-800">
       <ul className="space-y-1">
         {ITENS_NAVEGACAO.map((item) => {
           const ativo = item.href === '/' ? caminhoAtual === '/' : caminhoAtual?.startsWith(item.href);

@@ -20,7 +20,6 @@ export class OrgaosConcedentesService {
         .insert({
           nome: dados.nome,
           esfera: dados.esfera,
-          parlamentar_padrinho: dados.parlamentarPadrinho ?? null,
           contato: dados.contato ?? null,
         })
         .select()
@@ -32,7 +31,6 @@ export class OrgaosConcedentesService {
     const payload: Record<string, unknown> = {};
     if (dados.nome !== undefined) payload.nome = dados.nome;
     if (dados.esfera !== undefined) payload.esfera = dados.esfera;
-    if (dados.parlamentarPadrinho !== undefined) payload.parlamentar_padrinho = dados.parlamentarPadrinho;
     if (dados.contato !== undefined) payload.contato = dados.contato;
 
     return desembrulhar(await cliente.from('orgaos_concedentes').update(payload).eq('id', id).select().single());

@@ -10,6 +10,7 @@ import type {
   Aditivo,
   Usuario,
   DocumentoAnexo,
+  ObservacaoConvenio,
 } from '@jconv/compartilhado';
 import { chamarApi } from './cliente';
 
@@ -55,6 +56,16 @@ export const repassesApi = {
     chamarApi<Repasse>(`/convenios/${convenioId}/repasses/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
   excluir: (convenioId: string, id: string) =>
     chamarApi<{ sucesso: boolean }>(`/convenios/${convenioId}/repasses/${id}`, { method: 'DELETE' }),
+};
+
+// Histórico append-only: só listar e criar, por isso não há atualizar/excluir aqui.
+export const observacoesApi = {
+  listar: (convenioId: string) => chamarApi<ObservacaoConvenio[]>(`/convenios/${convenioId}/observacoes`),
+  criar: (convenioId: string, texto: string) =>
+    chamarApi<ObservacaoConvenio>(`/convenios/${convenioId}/observacoes`, {
+      method: 'POST',
+      body: JSON.stringify({ texto }),
+    }),
 };
 
 export const aditivosApi = {

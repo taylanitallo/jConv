@@ -30,6 +30,7 @@ export function FormularioConvenio({ convenio }: FormularioConvenioProps) {
   const [orgaoConcedenteId, setOrgaoConcedenteId] = useState(convenio?.orgaoConcedenteId ?? '');
   const [tipoInstrumento, setTipoInstrumento] = useState(convenio?.tipoInstrumento ?? TIPOS_INSTRUMENTO[0]);
   const [objeto, setObjeto] = useState(convenio?.objeto ?? '');
+  const [parlamentarPadrinho, setParlamentarPadrinho] = useState(campoTexto(convenio?.parlamentarPadrinho));
   const [statusGeral, setStatusGeral] = useState(convenio?.statusGeral ?? STATUS_GERAL_CONVENIO[0]);
 
   const [valorConveniado, setValorConveniado] = useState(campoTexto(convenio?.valorConveniado?.toString()));
@@ -58,7 +59,6 @@ export function FormularioConvenio({ convenio }: FormularioConvenioProps) {
   const [percentualExecutadoFinanceiro, setPercentualExecutadoFinanceiro] = useState(
     campoTexto(convenio?.percentualExecutadoFinanceiro?.toString()),
   );
-  const [observacoes, setObservacoes] = useState(campoTexto(convenio?.observacoes));
 
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -80,6 +80,7 @@ export function FormularioConvenio({ convenio }: FormularioConvenioProps) {
         orgaoConcedenteId,
         tipoInstrumento,
         objeto,
+        parlamentarPadrinho: parlamentarPadrinho || null,
         statusGeral,
         valorConveniado: numeroOuNulo(valorConveniado),
         valorConcedido: numeroOuNulo(valorConcedido),
@@ -100,7 +101,6 @@ export function FormularioConvenio({ convenio }: FormularioConvenioProps) {
         saldoEmConta: numeroOuNulo(saldoEmConta),
         percentualExecutadoFisico: numeroOuNulo(percentualExecutadoFisico),
         percentualExecutadoFinanceiro: numeroOuNulo(percentualExecutadoFinanceiro),
-        observacoes: observacoes || null,
       };
 
       if (convenio) {
@@ -160,6 +160,15 @@ export function FormularioConvenio({ convenio }: FormularioConvenioProps) {
               ))}
             </select>
           </div>
+        </div>
+        <div>
+          <label className={rotulo}>Parlamentar/Padrinho</label>
+          <input
+            value={parlamentarPadrinho}
+            onChange={(e) => setParlamentarPadrinho(e.target.value)}
+            placeholder="Deixe em branco se o convênio não vier de emenda parlamentar"
+            className={campo}
+          />
         </div>
       </section>
 
@@ -268,9 +277,18 @@ export function FormularioConvenio({ convenio }: FormularioConvenioProps) {
             <input type="number" step="0.01" value={percentualExecutadoFinanceiro} onChange={(e) => setPercentualExecutadoFinanceiro(e.target.value)} className={campo} />
           </div>
         </div>
+        {/* Observações não se editam aqui: são um histórico append-only. Este bloco mostra a
+            última entrada (a que sai nos relatórios) e manda registrar novas na aba Histórico. */}
         <div>
-          <label className={rotulo}>Observações</label>
-          <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={4} className={campo} />
+          <label className={rotulo}>Última observação</label>
+          <div className="mt-1 whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
+            {convenio?.observacoes || 'Nenhuma observação registrada.'}
+          </div>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            {convenio
+              ? 'O histórico é permanente. Para registrar uma nova observação, use a aba Histórico.'
+              : 'Após salvar o convênio, registre observações pela aba Histórico.'}
+          </p>
         </div>
       </section>
 

@@ -55,7 +55,6 @@ export default function PaginaOrgaosConcedentes() {
               <tr>
                 <th className="px-4 py-2 font-medium">Nome</th>
                 <th className="px-4 py-2 font-medium">Esfera</th>
-                <th className="px-4 py-2 font-medium">Parlamentar/Padrinho</th>
                 <th className="px-4 py-2 font-medium">Contato</th>
                 <th className="px-4 py-2" />
               </tr>
@@ -65,7 +64,6 @@ export default function PaginaOrgaosConcedentes() {
                 <tr key={orgao.id} className="border-t border-neutral-200 dark:border-neutral-800">
                   <td className="px-4 py-2">{orgao.nome}</td>
                   <td className="px-4 py-2">{ROTULOS_ESFERA_CONVENIO[orgao.esfera]}</td>
-                  <td className="px-4 py-2">{orgao.parlamentarPadrinho ?? '—'}</td>
                   <td className="px-4 py-2">{orgao.contato ?? '—'}</td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/orgaos-concedentes/${orgao.id}`} className="mr-3 text-blue-600 hover:underline">
@@ -83,7 +81,7 @@ export default function PaginaOrgaosConcedentes() {
               ))}
               {orgaos.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-neutral-500">
+                  <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
                     Nenhum órgão concedente cadastrado.
                   </td>
                 </tr>

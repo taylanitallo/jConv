@@ -10,6 +10,8 @@ export interface Convenio {
 
   tipoInstrumento: TipoInstrumento;
   objeto: string;
+  /** Parlamentar/padrinho da emenda que originou o convênio. */
+  parlamentarPadrinho: string | null;
 
   valorConveniado: number | null;
   valorConcedido: number | null;

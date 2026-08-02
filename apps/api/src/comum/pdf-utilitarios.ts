@@ -14,6 +14,21 @@ export function formatarData(data: string | null | undefined) {
   return new Date(data).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 }
 
+// Para colunas TIMESTAMPTZ (ex.: histórico de observações). Fixa o fuso de Irauçuba/CE em vez
+// de usar o do servidor, senão o mesmo registro sai com hora diferente em produção (UTC) e no
+// ambiente local.
+export function formatarDataHora(dataHora: string | null | undefined) {
+  if (!dataHora) return '—';
+  return new Date(dataHora).toLocaleString('pt-BR', {
+    timeZone: 'America/Fortaleza',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export function criarDocumento(titulo: string, subtitulo?: string): PDFKit.PDFDocument {
   const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
 

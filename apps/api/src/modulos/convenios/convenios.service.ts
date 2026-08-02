@@ -8,6 +8,7 @@ function paraPayload(dados: Partial<CriarConvenio>): Record<string, unknown> {
     orgaoConcedenteId: 'orgao_concedente_id',
     tipoInstrumento: 'tipo_instrumento',
     objeto: 'objeto',
+    parlamentarPadrinho: 'parlamentar_padrinho',
     valorConveniado: 'valor_conveniado',
     valorConcedido: 'valor_concedido',
     valorContrapartida: 'valor_contrapartida',
@@ -30,7 +31,8 @@ function paraPayload(dados: Partial<CriarConvenio>): Record<string, unknown> {
     statusGeral: 'status_geral',
     percentualExecutadoFisico: 'percentual_executado_fisico',
     percentualExecutadoFinanceiro: 'percentual_executado_financeiro',
-    observacoes: 'observacoes',
+    // observacoes é derivado do histórico (observacoes_convenio) e sincronizado por trigger —
+    // gravar aqui direto faria a última observação divergir do histórico.
   };
 
   const payload: Record<string, unknown> = {};

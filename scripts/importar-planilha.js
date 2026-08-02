@@ -252,7 +252,8 @@ function parsearLinhaConvenio(linha, layout, bloco, nomeAba) {
   }
 
   if (empresa?.contato) obsExtras.push(`Contato empresa: ${empresa.contato}`);
-  if (parlamentar) obsExtras.push(`Parlamentar/padrinho: ${parlamentar}`);
+  // O parlamentar/padrinho agora tem coluna própria em convenios (migration 0020); o texto bruto
+  // de origem continua preservado logo abaixo em "Órgão (texto original)".
   obsExtras.push(`Órgão (texto original): ${limpar(linha[layout.orgao])}`);
   obsExtras.push(`Fonte: aba ${nomeAba}, bloco "${bloco}"`);
 
@@ -269,6 +270,7 @@ function parsearLinhaConvenio(linha, layout, bloco, nomeAba) {
     dados: {
       tipoInstrumento,
       objeto,
+      parlamentarPadrinho: parlamentar,
       valorConveniado: typeof linha[layout.valorConveniado] === 'number' ? linha[layout.valorConveniado] : null,
       valorConcedido: typeof linha[layout.valorConcedido] === 'number' ? linha[layout.valorConcedido] : null,
       valorContrapartida: typeof linha[layout.valorContrapartida] === 'number' ? linha[layout.valorContrapartida] : null,
@@ -545,15 +547,15 @@ async function main() {
           numero_protocolo, numero_nup, numero_operacao_caixa, conta_bancaria, data_assinatura,
           data_inicio_vigencia, data_fim_vigencia, empresa_contratada_id, vigencia_contrato_empresa,
           saldo_em_conta, saldo_em_conta_referencia_em, status_geral, percentual_executado_financeiro,
-          observacoes
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+          observacoes, parlamentar_padrinho
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
         [
           orgaoId, d.tipoInstrumento, d.objeto, d.valorConveniado, d.valorConcedido,
           d.valorContrapartida, d.valorLicitado, d.numeroConvenio, d.numeroMapp, d.numeroSic,
           d.numeroProtocolo, d.numeroNup, d.numeroOperacaoCaixa, d.contaBancaria, d.dataAssinatura,
           d.dataInicioVigencia, d.dataFimVigencia, empresaId, d.vigenciaContratoEmpresa,
           d.saldoEmConta, d.saldoEmContaReferenciaEm, d.statusGeral, d.percentualExecutadoFinanceiro,
-          d.observacoes,
+          d.observacoes, d.parlamentarPadrinho,
         ],
       );
       gravados.convenio++;

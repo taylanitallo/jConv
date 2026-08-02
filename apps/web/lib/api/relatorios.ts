@@ -5,6 +5,10 @@ export function abrirRelatorioConvenio(convenioId: string) {
   window.open(`/api/relatorios/convenio/${convenioId}`, '_blank');
 }
 
+export function abrirRelatorioHistoricoConvenio(convenioId: string) {
+  window.open(`/api/relatorios/convenio/${convenioId}/historico`, '_blank');
+}
+
 export function abrirRelatorioConsolidado(filtros: Record<string, string | undefined>) {
   const params = new URLSearchParams(
     Object.fromEntries(Object.entries(filtros).filter(([, v]) => !!v)) as Record<string, string>,

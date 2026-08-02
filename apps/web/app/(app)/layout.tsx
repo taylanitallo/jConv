@@ -12,7 +12,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-neutral-200 px-6 py-3 dark:border-neutral-800">
+      <header className="flex items-center justify-between border-b border-neutral-200 px-6 py-3 print:hidden dark:border-neutral-800">
         <span className="font-semibold">jConv</span>
         <div className="flex items-center gap-4">
           <span className="text-sm text-neutral-500 dark:text-neutral-400">{usuario.email}</span>

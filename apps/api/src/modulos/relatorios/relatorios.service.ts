@@ -12,7 +12,14 @@ import {
   type TipoInstrumento,
 } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
-import { criarDocumento, desenharTabela, formatarData, formatarMoeda, COR_PRIMARIA } from '../../comum/pdf-utilitarios';
+import {
+  criarDocumento,
+  desenharTabela,
+  formatarData,
+  formatarDataHora,
+  formatarMoeda,
+  COR_PRIMARIA,
+} from '../../comum/pdf-utilitarios';
 import { DashboardService, FiltrosDashboard } from '../dashboard/dashboard.service';
 
 @Injectable()
@@ -117,9 +124,51 @@ export class RelatoriosService {
     }
 
     if (convenio.observacoes) {
-      doc.fontSize(11).text('Observações', { underline: true });
+      // convenio.observacoes espelha a última entrada do histórico (migration 0022). O
+      // histórico completo sai no relatório próprio, em relatorioHistoricoConvenio.
+      doc.fontSize(11).text('Última observação', { underline: true });
       doc.fontSize(8).text(convenio.observacoes);
     }
+
+    doc.end();
+    return doc;
+  }
+
+  async relatorioHistoricoConvenio(cliente: SupabaseClient, convenioId: string): Promise<PDFKit.PDFDocument> {
+    const convenio = desembrulhar(
+      await cliente.from('convenios').select('numero_sequencial, objeto, esfera, orgao_concedente_id').eq('id', convenioId).single(),
+    ) as Record<string, any>;
+    if (!convenio) throw new NotFoundException('Convênio não encontrado');
+
+    const [orgao, observacoes] = await Promise.all([
+      cliente.from('orgaos_concedentes').select('nome').eq('id', convenio.orgao_concedente_id).single(),
+      cliente.from('observacoes_convenio').select('*').eq('convenio_id', convenioId).order('criado_em', { ascending: false }),
+    ]);
+
+    const doc = criarDocumento(
+      `Histórico do Convênio nº ${convenio.numero_sequencial}`,
+      `${orgao.data?.nome ?? ''} — ${ROTULOS_ESFERA_CONVENIO[convenio.esfera as EsferaConvenio]}`,
+    );
+
+    doc.fontSize(11).text('Objeto', { underline: true });
+    doc.fontSize(9).text(convenio.objeto);
+    doc.moveDown(0.8);
+
+    const registros = observacoes.data ?? [];
+    doc.fontSize(11).text(`Observações registradas (${registros.length})`, { underline: true });
+    doc.moveDown(0.4);
+
+    if (registros.length === 0) {
+      doc.fontSize(9).fillColor('#666666').text('Nenhuma observação registrada até o momento.').fillColor('#000000');
+    }
+
+    registros.forEach((registro: any, indice: number) => {
+      // Mais recente primeiro; a primeira do PDF é a que aparece nos demais relatórios.
+      const cabecalho = `${formatarDataHora(registro.criado_em)} — ${registro.autor_nome ?? 'autor não identificado'}`;
+      doc.fontSize(8).fillColor(COR_PRIMARIA).text(indice === 0 ? `${cabecalho}  (mais recente)` : cabecalho);
+      doc.fillColor('#000000').fontSize(9).text(registro.texto);
+      doc.moveDown(0.6);
+    });
 
     doc.end();
     return doc;

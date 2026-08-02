@@ -11,9 +11,10 @@ import { AbaMedicoes } from '../_componentes/aba-medicoes';
 import { AbaRepasses } from '../_componentes/aba-repasses';
 import { AbaAditivos } from '../_componentes/aba-aditivos';
 import { AbaDocumentos } from '../_componentes/aba-documentos';
+import { AbaHistorico } from '../_componentes/aba-historico';
 import { abrirRelatorioConvenio } from '../../../../lib/api/relatorios';
 
-const ABAS = ['Dados Gerais', 'Medições', 'Repasses', 'Aditivos', 'Documentos'] as const;
+const ABAS = ['Dados Gerais', 'Medições', 'Repasses', 'Aditivos', 'Documentos', 'Histórico'] as const;
 
 export default function PaginaEditarConvenio() {
   const { id } = useParams<{ id: string }>();
@@ -64,7 +65,7 @@ export default function PaginaEditarConvenio() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Convênio nº {convenio.numeroSequencial}</h1>
-        <div className="flex gap-3">
+        <div className="flex gap-3 print:hidden">
           <button
             type="button"
             onClick={gerarResumo}
@@ -97,7 +98,7 @@ export default function PaginaEditarConvenio() {
         </div>
       )}
 
-      <div className="mb-4 flex gap-1 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="mb-4 flex gap-1 border-b border-neutral-200 print:hidden dark:border-neutral-800">
         {ABAS.map((item) => (
           <button
             key={item}
@@ -118,6 +119,7 @@ export default function PaginaEditarConvenio() {
       {aba === 'Repasses' && <AbaRepasses convenioId={convenio.id} />}
       {aba === 'Aditivos' && <AbaAditivos convenioId={convenio.id} />}
       {aba === 'Documentos' && <AbaDocumentos convenioId={convenio.id} />}
+      {aba === 'Histórico' && <AbaHistorico convenioId={convenio.id} />}
 
       {confirmandoExclusao && (
         <ModalConfirmacaoExclusao

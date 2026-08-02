@@ -7,9 +7,17 @@ import { RepassesController } from './repasses.controller';
 import { RepassesService } from './repasses.service';
 import { AditivosController } from './aditivos.controller';
 import { AditivosService } from './aditivos.service';
+import { ObservacoesController } from './observacoes.controller';
+import { ObservacoesService } from './observacoes.service';
 
 @Module({
-  controllers: [ConveniosController, MedicoesController, RepassesController, AditivosController],
-  providers: [ConveniosService, MedicoesService, RepassesService, AditivosService],
+  controllers: [
+    ConveniosController,
+    MedicoesController,
+    RepassesController,
+    AditivosController,
+    ObservacoesController,
+  ],
+  providers: [ConveniosService, MedicoesService, RepassesService, AditivosService, ObservacoesService],
 })
 export class ConveniosModule {}

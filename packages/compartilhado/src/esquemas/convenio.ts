@@ -5,6 +5,7 @@ export const esquemaCriarConvenio = z.object({
   orgaoConcedenteId: z.string().uuid('Selecione o órgão concedente'),
   tipoInstrumento: z.enum(TIPOS_INSTRUMENTO),
   objeto: z.string().trim().min(1, 'Descreva o objeto'),
+  parlamentarPadrinho: z.string().trim().optional().nullable(),
 
   valorConveniado: z.number().nonnegative().optional().nullable(),
   valorConcedido: z.number().nonnegative().optional().nullable(),
@@ -34,7 +35,8 @@ export const esquemaCriarConvenio = z.object({
   percentualExecutadoFisico: z.number().min(0).max(100).optional().nullable(),
   percentualExecutadoFinanceiro: z.number().min(0).max(100).optional().nullable(),
 
-  observacoes: z.string().trim().optional().nullable(),
+  // "observacoes" não entra aqui de propósito: é derivado do histórico append-only
+  // (observacoes_convenio). Para registrar algo, use POST /convenios/:id/observacoes.
 });
 
 export type CriarConvenio = z.infer<typeof esquemaCriarConvenio>;

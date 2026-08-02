@@ -24,29 +24,133 @@ import { chamarApi } from '../../lib/api/cliente';
 import { orgaosConcedentesApi } from '../../lib/api/recursos';
 import { usarAtualizacaoTempoReal } from '../../lib/supabase/usar-tempo-real';
 import { PALETA_CATEGORICA, CHROME_GRAFICO } from '../../lib/paleta';
-import { CartaoIndicador } from './_componentes/cartao-indicador';
+import { CartaoIndicador, type CartaoIndicadorProps } from './_componentes/cartao-indicador';
+import {
+  ModalDetalheIndicador,
+  type ColunaDetalhe,
+  type ConvenioDetalhado,
+} from './_componentes/modal-detalhe-indicador';
 import { PainelAssistenteIa } from './_componentes/painel-assistente-ia';
 import { abrirRelatorioDashboard } from '../../lib/api/relatorios';
 
+interface IndicadoresDashboard {
+  totalConveniado: number;
+  totalConcedido: number;
+  totalRepassado: number;
+  totalAReceber: number;
+  quantidadeConvenios: number;
+  vencendo30Dias: number;
+  vencendo60Dias: number;
+  vencendo90Dias: number;
+  obrasParadas: number;
+  pcsPendentes: number;
+}
+
+type ChaveIndicador = keyof IndicadoresDashboard;
+
 interface DadosDashboard {
-  indicadores: {
-    totalConveniado: number;
-    totalConcedido: number;
-    totalRepassado: number;
-    totalAReceber: number;
-    quantidadeConvenios: number;
-    vencendo30Dias: number;
-    vencendo60Dias: number;
-    vencendo90Dias: number;
-    obrasParadas: number;
-    pcsPendentes: number;
-  };
+  indicadores: IndicadoresDashboard;
   porStatus: { chave: string; quantidade: number }[];
   porEsfera: { chave: string; quantidade: number }[];
   rankingOrgaos: { orgao: string; valor: number }[];
   execucaoFisicoFinanceiro: { objeto: string; fisico: number; financeiro: number }[];
   evolucaoRepasses: { mes: string; valor: number }[];
+  detalhamento: {
+    convenios: ConvenioDetalhado[];
+    porIndicador: Record<ChaveIndicador, string[]>;
+  };
 }
+
+interface DefinicaoIndicador {
+  chave: ChaveIndicador;
+  rotulo: string;
+  formato: 'moeda' | 'inteiro';
+  /** Coluna extra mostrada na janela de detalhe deste indicador. */
+  coluna: ColunaDetalhe;
+  descricao: string;
+  cor?: (valor: number) => CartaoIndicadorProps['cor'];
+}
+
+// Fonte única dos cards: rótulo, cor e a janela de detalhe saem todos daqui, então o título da
+// janela nunca desencontra do card clicado.
+const INDICADORES: DefinicaoIndicador[] = [
+  {
+    chave: 'totalConveniado',
+    rotulo: 'Total conveniado',
+    formato: 'moeda',
+    coluna: 'valorConveniado',
+    descricao: 'Convênios com valor conveniado registrado, do maior para o menor.',
+  },
+  {
+    chave: 'totalConcedido',
+    rotulo: 'Total concedido',
+    formato: 'moeda',
+    coluna: 'valorConcedido',
+    descricao: 'Convênios com valor concedido pelo órgão, do maior para o menor.',
+  },
+  {
+    chave: 'totalRepassado',
+    rotulo: 'Total repassado',
+    formato: 'moeda',
+    coluna: 'valorRepassado',
+    cor: () => 'bom',
+    descricao: 'Convênios que já receberam repasses, com a soma repassada em cada um.',
+  },
+  {
+    chave: 'totalAReceber',
+    rotulo: 'Total a receber',
+    formato: 'moeda',
+    coluna: 'valorAReceber',
+    cor: () => 'atencao',
+    descricao: 'Convênios com saldo pendente (valor concedido menos o que já foi repassado).',
+  },
+  {
+    chave: 'quantidadeConvenios',
+    rotulo: 'Convênios',
+    formato: 'inteiro',
+    coluna: 'nenhuma',
+    descricao: 'Todos os convênios que atendem aos filtros aplicados no Dashboard.',
+  },
+  {
+    chave: 'vencendo30Dias',
+    rotulo: 'Vencendo em 30 dias',
+    formato: 'inteiro',
+    coluna: 'vigencia',
+    cor: (valor) => (valor > 0 ? 'critico' : 'neutro'),
+    descricao: 'Convênios ainda não encerrados cuja vigência termina nos próximos 30 dias.',
+  },
+  {
+    chave: 'vencendo60Dias',
+    rotulo: 'Vencendo em 60 dias',
+    formato: 'inteiro',
+    coluna: 'vigencia',
+    cor: (valor) => (valor > 0 ? 'atencao' : 'neutro'),
+    descricao: 'Convênios ainda não encerrados cuja vigência termina nos próximos 60 dias.',
+  },
+  {
+    chave: 'vencendo90Dias',
+    rotulo: 'Vencendo em 90 dias',
+    formato: 'inteiro',
+    coluna: 'vigencia',
+    descricao: 'Convênios ainda não encerrados cuja vigência termina nos próximos 90 dias.',
+  },
+  {
+    chave: 'obrasParadas',
+    rotulo: 'Obras paradas',
+    formato: 'inteiro',
+    coluna: 'valorConveniado',
+    cor: (valor) => (valor > 0 ? 'critico' : 'bom'),
+    descricao: 'Convênios com status "Obra Parada".',
+  },
+  {
+    chave: 'pcsPendentes',
+    rotulo: 'PCs pendentes',
+    formato: 'inteiro',
+    coluna: 'valorConveniado',
+    cor: (valor) => (valor > 0 ? 'atencao' : 'bom'),
+    descricao: 'Convênios em prestação de contas ou com PC enviada aguardando análise.',
+  },
+];
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -59,6 +163,7 @@ export default function PaginaDashboard() {
   const [filtroStatus, setFiltroStatus] = useState('');
   const [dados, setDados] = useState<DadosDashboard | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
+  const [indicadorAberto, setIndicadorAberto] = useState<ChaveIndicador | null>(null);
 
   const carregar = useCallback(async () => {
     const params = new URLSearchParams();
@@ -83,6 +188,15 @@ export default function PaginaDashboard() {
   if (!dados) return <p className="text-sm text-neutral-500">Carregando…</p>;
 
   const { indicadores } = dados;
+
+  const definicaoAberta = INDICADORES.find((def) => def.chave === indicadorAberto) ?? null;
+  const porId = new Map(dados.detalhamento.convenios.map((c) => [c.id, c]));
+  // A API já devolve os ids na ordem certa de cada indicador (valor desc, prazo asc); só resolvo.
+  const itensAbertos = definicaoAberta
+    ? (dados.detalhamento.porIndicador[definicaoAberta.chave] ?? [])
+        .map((id) => porId.get(id))
+        .filter((c): c is ConvenioDetalhado => c != null)
+    : [];
 
   const dadosEsfera = dados.porEsfera.map((item) => ({
     nome: ROTULOS_ESFERA_CONVENIO[item.chave as keyof typeof ROTULOS_ESFERA_CONVENIO] ?? item.chave,
@@ -154,16 +268,19 @@ export default function PaginaDashboard() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <CartaoIndicador rotulo="Total conveniado" valor={formatarMoeda(indicadores.totalConveniado)} />
-        <CartaoIndicador rotulo="Total concedido" valor={formatarMoeda(indicadores.totalConcedido)} />
-        <CartaoIndicador rotulo="Total repassado" valor={formatarMoeda(indicadores.totalRepassado)} cor="bom" />
-        <CartaoIndicador rotulo="Total a receber" valor={formatarMoeda(indicadores.totalAReceber)} cor="atencao" />
-        <CartaoIndicador rotulo="Convênios" valor={String(indicadores.quantidadeConvenios)} />
-        <CartaoIndicador rotulo="Vencendo em 30 dias" valor={String(indicadores.vencendo30Dias)} cor={indicadores.vencendo30Dias > 0 ? 'critico' : 'neutro'} />
-        <CartaoIndicador rotulo="Vencendo em 60 dias" valor={String(indicadores.vencendo60Dias)} cor={indicadores.vencendo60Dias > 0 ? 'atencao' : 'neutro'} />
-        <CartaoIndicador rotulo="Vencendo em 90 dias" valor={String(indicadores.vencendo90Dias)} />
-        <CartaoIndicador rotulo="Obras paradas" valor={String(indicadores.obrasParadas)} cor={indicadores.obrasParadas > 0 ? 'critico' : 'bom'} />
-        <CartaoIndicador rotulo="PCs pendentes" valor={String(indicadores.pcsPendentes)} cor={indicadores.pcsPendentes > 0 ? 'atencao' : 'bom'} />
+        {INDICADORES.map((def) => {
+          const valor = indicadores[def.chave];
+          return (
+            <CartaoIndicador
+              key={def.chave}
+              rotulo={def.rotulo}
+              valor={def.formato === 'moeda' ? formatarMoeda(valor) : String(valor)}
+              cor={def.cor?.(valor) ?? 'neutro'}
+              quantidadeDetalhes={(dados.detalhamento.porIndicador[def.chave] ?? []).length}
+              aoClicar={() => setIndicadorAberto(def.chave)}
+            />
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -238,6 +355,16 @@ export default function PaginaDashboard() {
       <div className="mt-6">
         <PainelAssistenteIa filtros={{ esfera: filtroEsfera, orgaoConcedenteId: filtroOrgao, statusGeral: filtroStatus }} />
       </div>
+
+      {definicaoAberta && (
+        <ModalDetalheIndicador
+          titulo={definicaoAberta.rotulo}
+          descricao={definicaoAberta.descricao}
+          coluna={definicaoAberta.coluna}
+          itens={itensAbertos}
+          aoFechar={() => setIndicadorAberto(null)}
+        />
+      )}
     </div>
   );
 }

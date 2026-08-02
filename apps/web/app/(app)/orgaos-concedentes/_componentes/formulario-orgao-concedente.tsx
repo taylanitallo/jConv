@@ -14,7 +14,6 @@ export function FormularioOrgaoConcedente({ orgao }: FormularioOrgaoConcedentePr
   const roteador = useRouter();
   const [nome, setNome] = useState(orgao?.nome ?? '');
   const [esfera, setEsfera] = useState(orgao?.esfera ?? ESFERAS_CONVENIO[0]);
-  const [parlamentarPadrinho, setParlamentarPadrinho] = useState(orgao?.parlamentarPadrinho ?? '');
   const [contato, setContato] = useState(orgao?.contato ?? '');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -23,7 +22,7 @@ export function FormularioOrgaoConcedente({ orgao }: FormularioOrgaoConcedentePr
     setErro(null);
     setSalvando(true);
     try {
-      const dados = { nome, esfera, parlamentarPadrinho: parlamentarPadrinho || null, contato: contato || null };
+      const dados = { nome, esfera, contato: contato || null };
       if (orgao) {
         await orgaosConcedentesApi.atualizar(orgao.id, dados);
       } else {
@@ -62,15 +61,6 @@ export function FormularioOrgaoConcedente({ orgao }: FormularioOrgaoConcedentePr
             </option>
           ))}
         </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Parlamentar/Padrinho</label>
-        <input
-          value={parlamentarPadrinho}
-          onChange={(e) => setParlamentarPadrinho(e.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800"
-        />
       </div>
 
       <div>

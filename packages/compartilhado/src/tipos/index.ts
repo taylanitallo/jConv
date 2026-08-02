@@ -10,3 +10,4 @@ export * from './repasse';
 export * from './aditivo';
 export * from './documento-anexo';
 export * from './alerta';
+export * from './observacao-convenio';

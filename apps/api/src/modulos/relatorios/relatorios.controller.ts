@@ -24,6 +24,16 @@ export class RelatoriosController {
     enviarPdf(resposta, `convenio-${id}.pdf`, doc);
   }
 
+  @Get('convenio/:id/historico')
+  async historicoConvenio(
+    @ClienteSupabase() cliente: SupabaseClient,
+    @Param('id') id: string,
+    @Res() resposta: Response,
+  ) {
+    const doc = await this.service.relatorioHistoricoConvenio(cliente, id);
+    enviarPdf(resposta, `historico-convenio-${id}.pdf`, doc);
+  }
+
   @Get('consolidado')
   async consolidado(
     @ClienteSupabase() cliente: SupabaseClient,
