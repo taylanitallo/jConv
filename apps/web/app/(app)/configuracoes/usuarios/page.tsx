@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ROTULOS_PAPEL_USUARIO, type Usuario } from '@jconv/compartilhado';
-import { usuariosApi } from '../../../lib/api/recursos';
+import { usuariosApi } from '../../../../lib/api/recursos';
 
 export default function PaginaUsuarios() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -29,7 +29,7 @@ export default function PaginaUsuarios() {
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Usuários</h1>
         <Link
-          href="/usuarios/novo"
+          href="/configuracoes/usuarios/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Novo usuário
@@ -68,7 +68,7 @@ export default function PaginaUsuarios() {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
-                    <Link href={`/usuarios/${u.id}`} className="mr-3 text-blue-600 hover:underline">
+                    <Link href={`/configuracoes/usuarios/${u.id}`} className="mr-3 text-blue-600 hover:underline">
                       Editar
                     </Link>
                     <button type="button" onClick={() => alternarAtivo(u)} className="text-neutral-600 hover:underline dark:text-neutral-300">

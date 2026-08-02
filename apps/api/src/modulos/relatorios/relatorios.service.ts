@@ -18,14 +18,35 @@ import {
   formatarData,
   formatarDataHora,
   formatarMoeda,
+  desenharRodape,
   COR_PRIMARIA,
   type OrientacaoPdf,
 } from '../../comum/pdf-utilitarios';
 import { DashboardService, FiltrosDashboard } from '../dashboard/dashboard.service';
+import { ConfiguracoesService } from '../configuracoes/configuracoes.service';
 
 @Injectable()
 export class RelatoriosService {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(
+    private readonly dashboardService: DashboardService,
+    private readonly configuracoesService: ConfiguracoesService,
+  ) {}
+
+  // Cabeçalho e rodapé de todo relatório vêm das Configurações. Falha na leitura não derruba o
+  // relatório: cai no cabeçalho padrão.
+  private async cabecalho(cliente: SupabaseClient) {
+    try {
+      const c = await this.configuracoesService.obter(cliente);
+      return {
+        municipioNome: c.municipio_nome,
+        municipioUf: c.municipio_uf,
+        orgaoGestor: c.orgao_gestor,
+        rodapeRelatorio: c.rodape_relatorio,
+      };
+    } catch {
+      return undefined;
+    }
+  }
 
   async relatorioConvenio(
     cliente: SupabaseClient,
@@ -48,10 +69,12 @@ export class RelatoriosService {
       cliente.from('aditivos').select('*').eq('convenio_id', convenioId).order('data'),
     ]);
 
+    const municipio = await this.cabecalho(cliente);
     const doc = criarDocumento(
       `Convênio nº ${convenio.numero_sequencial}`,
       `${orgao.data?.nome ?? ''} — ${ROTULOS_ESFERA_CONVENIO[convenio.esfera as EsferaConvenio]}`,
       orientacao,
+      municipio,
     );
 
     doc.fontSize(11).text('Objeto', { underline: true });
@@ -136,6 +159,7 @@ export class RelatoriosService {
       doc.fontSize(8).text(convenio.observacoes);
     }
 
+    desenharRodape(doc, municipio?.rodapeRelatorio);
     doc.end();
     return doc;
   }
@@ -155,10 +179,12 @@ export class RelatoriosService {
       cliente.from('observacoes_convenio').select('*').eq('convenio_id', convenioId).order('criado_em', { ascending: false }),
     ]);
 
+    const municipio = await this.cabecalho(cliente);
     const doc = criarDocumento(
       `Histórico do Convênio nº ${convenio.numero_sequencial}`,
       `${orgao.data?.nome ?? ''} — ${ROTULOS_ESFERA_CONVENIO[convenio.esfera as EsferaConvenio]}`,
       orientacao,
+      municipio,
     );
 
     doc.fontSize(11).text('Objeto', { underline: true });
@@ -181,6 +207,7 @@ export class RelatoriosService {
       doc.moveDown(0.6);
     });
 
+    desenharRodape(doc, municipio?.rodapeRelatorio);
     doc.end();
     return doc;
   }
@@ -211,7 +238,8 @@ export class RelatoriosService {
     const totalConveniado = convenios.reduce((acc, c) => acc + (c.valor_conveniado ?? 0), 0);
     const totalConcedido = convenios.reduce((acc, c) => acc + (c.valor_concedido ?? 0), 0);
 
-    const doc = criarDocumento(titulo, `${convenios.length} convênio(s) encontrado(s)`, orientacao);
+    const municipio = await this.cabecalho(cliente);
+    const doc = criarDocumento(titulo, `${convenios.length} convênio(s) encontrado(s)`, orientacao, municipio);
 
     doc.fontSize(10).fillColor(COR_PRIMARIA).text(`Total conveniado: ${formatarMoeda(totalConveniado)}`);
     doc.fillColor('#000000').text(`Total concedido: ${formatarMoeda(totalConcedido)}`);
@@ -235,6 +263,7 @@ export class RelatoriosService {
       ]),
     );
 
+    desenharRodape(doc, municipio?.rodapeRelatorio);
     doc.end();
     return doc;
   }
@@ -246,10 +275,12 @@ export class RelatoriosService {
   ): Promise<PDFKit.PDFDocument> {
     const dados = await this.dashboardService.obterDados(cliente, filtros);
 
+    const municipio = await this.cabecalho(cliente);
     const doc = criarDocumento(
       'Snapshot do Dashboard',
       'Indicadores no estado atual dos filtros aplicados',
       orientacao,
+      municipio,
     );
 
     const cartoes: [string, string][] = [
@@ -304,6 +335,7 @@ export class RelatoriosService {
       dados.rankingOrgaos.map((r) => [r.orgao, formatarMoeda(r.valor)]),
     );
 
+    desenharRodape(doc, municipio?.rodapeRelatorio);
     doc.end();
     return doc;
   }

@@ -10,8 +10,10 @@ interface ConvenioParaAlerta {
   vigencia_contrato_empresa: string | null;
 }
 
-const DIAS_VIGENCIA_PROXIMA = 90;
-const DIAS_CONTRATO_EMPRESA_PROXIMO = 60;
+// Usados só se a leitura da configuração falhar — os alertas nunca devem parar de rodar por
+// causa disso. Os valores em uso vêm da aba "Gerais" das Configurações (migration 0024).
+const PADRAO_DIAS_VIGENCIA_PROXIMA = 90;
+const PADRAO_DIAS_CONTRATO_EMPRESA_PROXIMO = 60;
 
 // Motor de alertas (Fase 4): roda periodicamente com a service role (ignora RLS de propósito —
 // é uma rotina de sistema, não uma requisição de usuário) e faz upsert idempotente em
@@ -32,6 +34,15 @@ export class AlertasService implements OnApplicationBootstrap {
   async recalcularAlertas() {
     this.logger.log('Recalculando alertas...');
 
+    const { data: configuracao } = await this.supabaseAdmin
+      .from('configuracoes')
+      .select('dias_alerta_vigencia, dias_alerta_contrato_empresa')
+      .single();
+
+    const diasVigencia = configuracao?.dias_alerta_vigencia ?? PADRAO_DIAS_VIGENCIA_PROXIMA;
+    const diasContratoEmpresa =
+      configuracao?.dias_alerta_contrato_empresa ?? PADRAO_DIAS_CONTRATO_EMPRESA_PROXIMO;
+
     const { data: convenios, error } = await this.supabaseAdmin
       .from('convenios')
       .select('id, status_geral, data_fim_vigencia, vigencia_contrato_empresa');
@@ -50,7 +61,7 @@ export class AlertasService implements OnApplicationBootstrap {
     for (const c of convenios as ConvenioParaAlerta[]) {
       if (c.data_fim_vigencia) {
         const dias = diasAte(c.data_fim_vigencia);
-        if (dias >= 0 && dias <= DIAS_VIGENCIA_PROXIMA && !['ObraConcluida', 'PcAprovada'].includes(c.status_geral)) {
+        if (dias >= 0 && dias <= diasVigencia && !['ObraConcluida', 'PcAprovada'].includes(c.status_geral)) {
           alertas.push({
             convenio_id: c.id,
             tipo: 'VigenciaProximaDoFim',
@@ -61,7 +72,7 @@ export class AlertasService implements OnApplicationBootstrap {
 
       if (c.vigencia_contrato_empresa) {
         const dias = diasAte(c.vigencia_contrato_empresa);
-        if (dias >= 0 && dias <= DIAS_CONTRATO_EMPRESA_PROXIMO) {
+        if (dias >= 0 && dias <= diasContratoEmpresa) {
           alertas.push({
             convenio_id: c.id,
             tipo: 'ContratoEmpresaVencendo',

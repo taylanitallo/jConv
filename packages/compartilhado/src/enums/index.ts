@@ -9,3 +9,4 @@ export * from './medicao';
 export * from './repasse';
 export * from './documento-anexo';
 export * from './alerta';
+export * from './configuracao';

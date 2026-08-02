@@ -1,4 +1,8 @@
 import PDFDocument from 'pdfkit';
+// Fonte única da orientação: o mesmo enum usado pelo front e pelo esquema de configuração.
+import { ORIENTACOES_PDF, type OrientacaoPdf } from '@jconv/compartilhado';
+
+export { ORIENTACOES_PDF, type OrientacaoPdf };
 
 export const COR_PRIMARIA = '#1d4ed8';
 export const COR_TEXTO_SECUNDARIO = '#52514e';
@@ -29,13 +33,19 @@ export function formatarDataHora(dataHora: string | null | undefined) {
   });
 }
 
-export const ORIENTACOES_PDF = ['retrato', 'paisagem'] as const;
-export type OrientacaoPdf = (typeof ORIENTACOES_PDF)[number];
+/** Identificação do município no cabeçalho, vinda das Configurações (migration 0024). */
+export interface CabecalhoMunicipio {
+  municipioNome: string;
+  municipioUf: string;
+  orgaoGestor?: string | null;
+  rodapeRelatorio?: string | null;
+}
 
 export function criarDocumento(
   titulo: string,
   subtitulo?: string,
   orientacao: OrientacaoPdf = 'retrato',
+  municipio?: CabecalhoMunicipio,
 ): PDFKit.PDFDocument {
   const doc = new PDFDocument({
     size: 'A4',
@@ -44,7 +54,13 @@ export function criarDocumento(
     bufferPages: true,
   });
 
-  doc.fillColor(COR_PRIMARIA).fontSize(18).text('jConv', { continued: false });
+  // Sem configuração carregada, cai no nome do sistema — um relatório nunca deve deixar de sair
+  // por causa do cabeçalho.
+  const identificacao = municipio
+    ? `${municipio.orgaoGestor?.trim() || `Prefeitura Municipal de ${municipio.municipioNome}`} — ${municipio.municipioNome}/${municipio.municipioUf}`
+    : 'jConv';
+
+  doc.fillColor(COR_PRIMARIA).fontSize(18).text(identificacao, { continued: false });
   doc.fillColor('#000000').fontSize(14).text(titulo, { paragraphGap: 2 });
   if (subtitulo) {
     doc.fillColor(COR_TEXTO_SECUNDARIO).fontSize(9).text(subtitulo);
@@ -57,6 +73,14 @@ export function criarDocumento(
   doc.fillColor('#000000');
 
   return doc;
+}
+
+// Rodapé livre configurado na aba Layout. Chamado antes de doc.end().
+export function desenharRodape(doc: PDFKit.PDFDocument, texto?: string | null) {
+  if (!texto?.trim()) return;
+  doc.moveDown(1);
+  doc.fillColor(COR_TEXTO_SECUNDARIO).fontSize(8).text(texto.trim(), { align: 'center' });
+  doc.fillColor('#000000');
 }
 
 export interface ColunaTabela {

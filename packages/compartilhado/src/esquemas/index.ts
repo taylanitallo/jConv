@@ -11,3 +11,5 @@ export * from './repasse';
 export * from './aditivo';
 export * from './documento-anexo';
 export * from './observacao-convenio';
+export * from './configuracao';
+export * from './secretaria';

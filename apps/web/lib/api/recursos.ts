@@ -11,6 +11,9 @@ import type {
   Usuario,
   DocumentoAnexo,
   ObservacaoConvenio,
+  Secretaria,
+  ConfiguracaoSistema,
+  AtualizarConfiguracao,
 } from '@jconv/compartilhado';
 import { chamarApi } from './cliente';
 
@@ -56,6 +59,18 @@ export const repassesApi = {
     chamarApi<Repasse>(`/convenios/${convenioId}/repasses/${id}`, { method: 'PATCH', body: JSON.stringify(dados) }),
   excluir: (convenioId: string, id: string) =>
     chamarApi<{ sucesso: boolean }>(`/convenios/${convenioId}/repasses/${id}`, { method: 'DELETE' }),
+};
+
+export const secretariasApi = {
+  ...recurso<Secretaria, Record<string, unknown>>('/secretarias'),
+  listarOrgaos: (id: string) => chamarApi<{ orgaoConcedenteId: string }[]>(`/secretarias/${id}/orgaos`),
+};
+
+// Linha única: só ler e atualizar (ver migration 0024).
+export const configuracoesApi = {
+  obter: () => chamarApi<ConfiguracaoSistema>('/configuracoes'),
+  atualizar: (dados: AtualizarConfiguracao) =>
+    chamarApi<ConfiguracaoSistema>('/configuracoes', { method: 'PATCH', body: JSON.stringify(dados) }),
 };
 
 // Histórico append-only: só listar e criar, por isso não há atualizar/excluir aqui.

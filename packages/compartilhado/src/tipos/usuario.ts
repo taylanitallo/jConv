@@ -6,12 +6,8 @@ export interface Usuario {
   email: string;
   papel: PapelUsuario;
   ativo: boolean;
+  /** Secretaria do usuário; define o escopo de órgãos do perfil LeituraSecretario. */
+  secretariaId: string | null;
   criadoEm: string;
   atualizadoEm: string;
-}
-
-export interface UsuarioOrgao {
-  usuarioId: string;
-  orgaoConcedenteId: string;
-  criadoEm: string;
 }

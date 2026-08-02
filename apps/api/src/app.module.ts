@@ -14,6 +14,7 @@ import { DashboardModule } from './modulos/dashboard/dashboard.module';
 import { AlertasModule } from './modulos/alertas/alertas.module';
 import { RelatoriosModule } from './modulos/relatorios/relatorios.module';
 import { IaModule } from './modulos/ia/ia.module';
+import { ConfiguracoesModuloModule } from './modulos/configuracoes/configuracoes-modulo.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { IaModule } from './modulos/ia/ia.module';
     AlertasModule,
     RelatoriosModule,
     IaModule,
+    ConfiguracoesModuloModule,
   ],
 })
 export class AppModule {}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { Usuario } from '@jconv/compartilhado';
-import { usuariosApi } from '../../../../lib/api/recursos';
+import { usuariosApi } from '../../../../../lib/api/recursos';
 import { FormularioUsuario } from '../_componentes/formulario-usuario';
 
 export default function PaginaEditarUsuario() {

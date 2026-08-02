@@ -11,22 +11,39 @@ import { ConfiguracaoService } from '../../configuracao/configuracao.service';
 import { desembrulhar } from '../../comum/supabase-erro';
 import { formatarData, formatarMoeda } from '../../comum/pdf-utilitarios';
 import { DashboardService, FiltrosDashboard } from '../dashboard/dashboard.service';
+import { ConfiguracoesService } from '../configuracoes/configuracoes.service';
 
 const MODELO = 'claude-opus-4-8';
 
-const SISTEMA_ASSISTENTE = `Você é o assistente de IA do jConv, sistema de gestão de convênios, propostas, \
-emendas parlamentares, obras e prestações de contas da Prefeitura de Irauçuba/CE. Responda em \
+// O município sai das Configurações (migration 0024) em vez de ficar fixo aqui — ele é
+// configuração da instalação, não código.
+function sistemaAssistente(municipio: string) {
+  return `Você é o assistente de IA do jConv, sistema de gestão de convênios, propostas, \
+emendas parlamentares, obras e prestações de contas da ${municipio}. Responda em \
 português, de forma direta e precisa, baseando-se SOMENTE nos dados fornecidos no contexto. Se a \
 pergunta não puder ser respondida com os dados disponíveis, diga isso claramente em vez de \
 inventar informação. Valores monetários e datas devem ser citados exatamente como aparecem no \
 contexto.`;
+}
 
 @Injectable()
 export class IaService {
   constructor(
     private readonly configuracao: ConfiguracaoService,
     private readonly dashboardService: DashboardService,
+    private readonly configuracoesSistema: ConfiguracoesService,
   ) {}
+
+  // Falha na leitura não deve derrubar o assistente: cai num rótulo genérico.
+  private async prompt(cliente: SupabaseClient) {
+    try {
+      const c = await this.configuracoesSistema.obter(cliente);
+      const orgao = c.orgao_gestor?.trim() || `Prefeitura Municipal de ${c.municipio_nome}`;
+      return sistemaAssistente(`${orgao} (${c.municipio_nome}/${c.municipio_uf})`);
+    } catch {
+      return sistemaAssistente('prefeitura municipal');
+    }
+  }
 
   private obterCliente(): Anthropic {
     const chave = this.configuracao.anthropicApiKey;
@@ -79,7 +96,7 @@ export class IaService {
       model: MODELO,
       max_tokens: 1500,
       thinking: { type: 'adaptive' },
-      system: SISTEMA_ASSISTENTE,
+      system: await this.prompt(cliente),
       messages: [
         {
           role: 'user',
@@ -120,7 +137,7 @@ export class IaService {
       model: MODELO,
       max_tokens: 1000,
       thinking: { type: 'adaptive' },
-      system: `${SISTEMA_ASSISTENTE} Gere um resumo executivo de 3 a 5 frases sobre o convênio a seguir, cobrindo objeto, situação atual, execução física/financeira e pontos de atenção (atrasos, pendências, vigência).`,
+      system: `${await this.prompt(cliente)} Gere um resumo executivo de 3 a 5 frases sobre o convênio a seguir, cobrindo objeto, situação atual, execução física/financeira e pontos de atenção (atrasos, pendências, vigência).`,
       messages: [{ role: 'user', content: contexto }],
     });
 
@@ -135,7 +152,7 @@ export class IaService {
       model: MODELO,
       max_tokens: 1200,
       thinking: { type: 'adaptive' },
-      system: `${SISTEMA_ASSISTENTE} Gere um resumo executivo (1 parágrafo curto + até 5 bullets) sobre o panorama geral de convênios a seguir, destacando riscos (vencimentos próximos, obras paradas, PCs pendentes) e o total de recursos.`,
+      system: `${await this.prompt(cliente)} Gere um resumo executivo (1 parágrafo curto + até 5 bullets) sobre o panorama geral de convênios a seguir, destacando riscos (vencimentos próximos, obras paradas, PCs pendentes) e o total de recursos.`,
       messages: [{ role: 'user', content: JSON.stringify(dados, null, 2) }],
     });
 
@@ -173,7 +190,7 @@ export class IaService {
       model: MODELO,
       max_tokens: 1500,
       thinking: { type: 'adaptive' },
-      system: `${SISTEMA_ASSISTENTE} Extraia do documento anexado os dados estruturados relevantes para um Repasse ou Medição de convênio (tipo, data, valor, número de parcela/medição, percentual). Responda APENAS com um JSON válido, sem texto antes ou depois, no formato: {"tipoSugerido": "Repasse"|"Medicao"|"Desconhecido", "data": "YYYY-MM-DD"|null, "valor": number|null, "numero": number|null, "percentual": number|null, "observacoes": string}.`,
+      system: `${await this.prompt(cliente)} Extraia do documento anexado os dados estruturados relevantes para um Repasse ou Medição de convênio (tipo, data, valor, número de parcela/medição, percentual). Responda APENAS com um JSON válido, sem texto antes ou depois, no formato: {"tipoSugerido": "Repasse"|"Medicao"|"Desconhecido", "data": "YYYY-MM-DD"|null, "valor": number|null, "numero": number|null, "percentual": number|null, "observacoes": string}.`,
       messages: [
         {
           role: 'user',

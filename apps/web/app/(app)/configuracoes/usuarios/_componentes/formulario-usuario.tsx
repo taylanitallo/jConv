@@ -3,9 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BarraAcoesFormulario } from '@jconv/compartilhado/componentes';
-import { PAPEIS_USUARIO, ROTULOS_PAPEL_USUARIO, type OrgaoConcedente, type Usuario } from '@jconv/compartilhado';
-import { orgaosConcedentesApi, usuariosApi } from '../../../../lib/api/recursos';
-import { chamarApi } from '../../../../lib/api/cliente';
+import { PAPEIS_USUARIO, ROTULOS_PAPEL_USUARIO, type Secretaria, type Usuario } from '@jconv/compartilhado';
+import { secretariasApi, usuariosApi } from '../../../../../lib/api/recursos';
 
 export interface FormularioUsuarioProps {
   usuario?: Usuario;
@@ -13,39 +12,28 @@ export interface FormularioUsuarioProps {
 
 export function FormularioUsuario({ usuario }: FormularioUsuarioProps) {
   const roteador = useRouter();
-  const [orgaos, setOrgaos] = useState<OrgaoConcedente[]>([]);
+  const [secretarias, setSecretarias] = useState<Secretaria[]>([]);
   const [nome, setNome] = useState(usuario?.nome ?? '');
   const [email, setEmail] = useState(usuario?.email ?? '');
   const [papel, setPapel] = useState(usuario?.papel ?? PAPEIS_USUARIO[0]);
-  const [orgaosSelecionados, setOrgaosSelecionados] = useState<string[]>([]);
+  const [secretariaId, setSecretariaId] = useState(usuario?.secretariaId ?? '');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    orgaosConcedentesApi.listar().then(setOrgaos);
-    if (usuario) {
-      chamarApi<{ orgaoConcedenteId: string }[]>(`/usuarios/${usuario.id}/orgaos`).then((vinculos) =>
-        setOrgaosSelecionados(vinculos.map((v) => v.orgaoConcedenteId)),
-      );
-    }
-  }, [usuario]);
-
-  function alternarOrgao(orgaoId: string) {
-    setOrgaosSelecionados((atual) =>
-      atual.includes(orgaoId) ? atual.filter((id) => id !== orgaoId) : [...atual, orgaoId],
-    );
-  }
+    secretariasApi.listar().then(setSecretarias);
+  }, []);
 
   async function aoSalvar() {
     setErro(null);
     setSalvando(true);
     try {
       if (usuario) {
-        await usuariosApi.atualizar(usuario.id, { nome, papel, orgaosConcedentesIds: orgaosSelecionados });
+        await usuariosApi.atualizar(usuario.id, { nome, papel, secretariaId: secretariaId || null });
       } else {
-        await usuariosApi.criar({ nome, email, papel, orgaosConcedentesIds: orgaosSelecionados });
+        await usuariosApi.criar({ nome, email, papel, secretariaId: secretariaId || null });
       }
-      roteador.push('/usuarios');
+      roteador.push('/configuracoes/usuarios');
       roteador.refresh();
     } catch (excecao) {
       setErro(excecao instanceof Error ? excecao.message : 'Erro ao salvar');
@@ -96,29 +84,33 @@ export function FormularioUsuario({ usuario }: FormularioUsuarioProps) {
         </select>
       </div>
 
-      {papel === 'LeituraSecretario' && (
-        <div>
-          <label className="block text-sm font-medium">Órgãos concedentes (escopo de leitura)</label>
-          <div className="mt-1 max-h-48 space-y-1 overflow-y-auto rounded-md border border-neutral-300 p-2 dark:border-neutral-700">
-            {orgaos.map((o) => (
-              <label key={o.id} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={orgaosSelecionados.includes(o.id)}
-                  onChange={() => alternarOrgao(o.id)}
-                />
-                {o.nome}
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
+      <div>
+        <label className="block text-sm font-medium">Secretaria</label>
+        <select
+          value={secretariaId}
+          onChange={(e) => setSecretariaId(e.target.value)}
+          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800"
+        >
+          <option value="">Nenhuma</option>
+          {secretarias.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nome}
+            </option>
+          ))}
+        </select>
+        {papel === 'LeituraSecretario' && (
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Este perfil só enxerga os convênios dos órgãos vinculados à secretaria escolhida. Sem secretaria, não
+            enxerga nenhum. Os órgãos de cada secretaria são definidos na aba Secretarias.
+          </p>
+        )}
+      </div>
 
       {erro && <p className="text-sm text-red-600">{erro}</p>}
 
       <BarraAcoesFormulario
-        aoVoltar={() => roteador.push('/usuarios')}
-        aoCancelar={() => roteador.push('/usuarios')}
+        aoVoltar={() => roteador.push('/configuracoes/usuarios')}
+        aoCancelar={() => roteador.push('/configuracoes/usuarios')}
         aoSalvar={aoSalvar}
         salvando={salvando}
         formularioSujo={nome !== (usuario?.nome ?? '')}

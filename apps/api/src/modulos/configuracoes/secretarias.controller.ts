@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { esquemaAtualizarUsuario, esquemaCriarUsuario } from '@jconv/compartilhado';
-import { UsuariosService } from './usuarios.service';
+import { esquemaAtualizarSecretaria, esquemaCriarSecretaria } from '@jconv/compartilhado';
+import { SecretariasService } from './secretarias.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { PapeisGuard } from '../../guardas/papeis.guard';
 import { Papeis } from '../../comum/decoradores/papeis.decorator';
@@ -9,12 +9,10 @@ import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decora
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
-// Gerenciamento de Usuários — restrito ao Administrador (seção 3, item 2 do enunciado).
-@Controller('usuarios')
+@Controller('secretarias')
 @UseGuards(AutenticacaoGuard, PapeisGuard)
-@Papeis('Administrador')
-export class UsuariosController {
-  constructor(private readonly service: UsuariosService) {}
+export class SecretariasController {
+  constructor(private readonly service: SecretariasService) {}
 
   @Get()
   async listar(@ClienteSupabase() cliente: SupabaseClient) {
@@ -26,18 +24,29 @@ export class UsuariosController {
     return paraCamelCase(await this.service.obter(cliente, id));
   }
 
-  // GET :id/orgaos saiu daqui: o escopo de órgãos passou a ser da Secretaria do usuário
-  // (migration 0024). O equivalente agora é GET /secretarias/:id/orgaos.
+  @Get(':id/orgaos')
+  async listarOrgaos(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+    return paraCamelCase(await this.service.listarOrgaos(cliente, id));
+  }
 
   @Post()
+  @Papeis('Administrador')
   async criar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
-    const dados = validarComEsquema(esquemaCriarUsuario, corpo);
+    const dados = validarComEsquema(esquemaCriarSecretaria, corpo);
     return paraCamelCase(await this.service.criar(cliente, dados));
   }
 
   @Patch(':id')
+  @Papeis('Administrador')
   async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
-    const dados = validarComEsquema(esquemaAtualizarUsuario, corpo);
+    const dados = validarComEsquema(esquemaAtualizarSecretaria, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
+  }
+
+  @Delete(':id')
+  @Papeis('Administrador')
+  async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+    await this.service.excluir(cliente, id);
+    return { sucesso: true };
   }
 }

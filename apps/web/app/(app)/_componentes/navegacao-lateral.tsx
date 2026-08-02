@@ -11,7 +11,8 @@ const ITENS_NAVEGACAO = [
   { rotulo: 'Limites de Custeio', href: '/limites-custeio' },
   { rotulo: 'Órgãos Concedentes', href: '/orgaos-concedentes' },
   { rotulo: 'Empresas Contratadas', href: '/empresas-contratadas' },
-  { rotulo: 'Usuários', href: '/usuarios' },
+  // Usuários virou aba dentro de Configurações.
+  { rotulo: 'Configurações', href: '/configuracoes' },
 ];
 
 export function NavegacaoLateral() {
