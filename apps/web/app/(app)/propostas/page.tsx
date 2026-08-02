@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
 import { ROTULOS_STATUS_PROPOSTA, type OrgaoConcedente, type Proposta } from '@jconv/compartilhado';
 import { orgaosConcedentesApi, propostasApi } from '../../../lib/api/recursos';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 export default function PaginaPropostas() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('Propostas');
   const [itens, setItens] = useState<Proposta[]>([]);
   const [orgaos, setOrgaos] = useState<OrgaoConcedente[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -45,12 +48,14 @@ export default function PaginaPropostas() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Propostas</h1>
+        {podeAlterar && (
         <Link
           href="/propostas/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nova proposta
         </Link>
+        )}
       </div>
 
       {carregando ? (
@@ -81,7 +86,7 @@ export default function PaginaPropostas() {
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/propostas/${item.id}`} className="mr-3 text-blue-600 hover:underline">
-                      Editar
+                      {podeAlterar ? 'Editar' : 'Ver'}
                     </Link>
                     <button type="button" onClick={() => setParaExcluir(item)} className="text-red-600 hover:underline">
                       Excluir

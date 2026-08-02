@@ -3,14 +3,15 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { esquemaAtualizarAditivo, esquemaCriarAditivo } from '@jconv/compartilhado';
 import { AditivosService } from './aditivos.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
-import { Papeis } from '../../comum/decoradores/papeis.decorator';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('convenios/:convenioId/aditivos')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Convenios', 'Parcial')
 export class AditivosController {
   constructor(private readonly service: AditivosService) {}
 
@@ -20,7 +21,7 @@ export class AditivosController {
   }
 
   @Post()
-  @Papeis('Administrador', 'GestorConvenios')
+  @Permissao('Convenios', 'Total')
   async criar(
     @ClienteSupabase() cliente: SupabaseClient,
     @Param('convenioId') convenioId: string,
@@ -31,14 +32,14 @@ export class AditivosController {
   }
 
   @Patch(':id')
-  @Papeis('Administrador', 'GestorConvenios')
+  @Permissao('Convenios', 'Total')
   async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarAditivo, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Delete(':id')
-  @Papeis('Administrador', 'GestorConvenios')
+  @Permissao('Convenios', 'Total')
   async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };

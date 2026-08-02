@@ -5,12 +5,15 @@ import { useEffect, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
 import { ROTULOS_TIPO_LIMITE_CUSTEIO, type LimiteCusteio } from '@jconv/compartilhado';
 import { limitesCusteioApi } from '../../../lib/api/recursos';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 export default function PaginaLimitesCusteio() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('LimitesCusteio');
   const [itens, setItens] = useState<LimiteCusteio[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [paraExcluir, setParaExcluir] = useState<LimiteCusteio | null>(null);
@@ -42,12 +45,14 @@ export default function PaginaLimitesCusteio() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Limites de Custeio</h1>
+        {podeAlterar && (
         <Link
           href="/limites-custeio/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Novo limite
         </Link>
+        )}
       </div>
 
       {carregando ? (
@@ -75,7 +80,7 @@ export default function PaginaLimitesCusteio() {
                   <td className="px-4 py-2">{formatarMoeda(item.saldo)}</td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/limites-custeio/${item.id}`} className="mr-3 text-blue-600 hover:underline">
-                      Editar
+                      {podeAlterar ? 'Editar' : 'Ver'}
                     </Link>
                     <button type="button" onClick={() => setParaExcluir(item)} className="text-red-600 hover:underline">
                       Excluir

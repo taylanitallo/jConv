@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
 import type { EmpresaContratada } from '@jconv/compartilhado';
 import { empresasContratadasApi } from '../../../lib/api/recursos';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 export default function PaginaEmpresasContratadas() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('EmpresasContratadas');
   const [empresas, setEmpresas] = useState<EmpresaContratada[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [paraExcluir, setParaExcluir] = useState<EmpresaContratada | null>(null);
@@ -38,12 +41,14 @@ export default function PaginaEmpresasContratadas() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Empresas Contratadas</h1>
+        {podeAlterar && (
         <Link
           href="/empresas-contratadas/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nova empresa
         </Link>
+        )}
       </div>
 
       {carregando ? (
@@ -67,8 +72,9 @@ export default function PaginaEmpresasContratadas() {
                   <td className="px-4 py-2">{empresa.cnpj ?? '—'}</td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/empresas-contratadas/${empresa.id}`} className="mr-3 text-blue-600 hover:underline">
-                      Editar
+                      {podeAlterar ? 'Editar' : 'Ver'}
                     </Link>
+                    {podeAlterar && (
                     <button
                       type="button"
                       onClick={() => setParaExcluir(empresa)}
@@ -76,6 +82,7 @@ export default function PaginaEmpresasContratadas() {
                     >
                       Excluir
                     </button>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -3,7 +3,8 @@ import { Response } from 'express';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { RelatoriosService } from './relatorios.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { ORIENTACOES_PDF, type OrientacaoPdf } from '../../comum/pdf-utilitarios';
 import { FiltrosDashboard } from '../dashboard/dashboard.service';
@@ -21,7 +22,8 @@ function enviarPdf(resposta: Response, nomeArquivo: string, documento: PDFKit.PD
 }
 
 @Controller('relatorios')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao(['Convenios', 'Dashboard'], 'Parcial')
 export class RelatoriosController {
   constructor(private readonly service: RelatoriosService) {}
 

@@ -2,26 +2,30 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ModuloSistema } from '@jconv/compartilhado';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 // Abas como rotas de verdade (e não estado local): cada uma é linkável, sobrevive ao refresh e
 // aparece no histórico do navegador.
-const ABAS = [
-  { rotulo: 'Gerais', href: '/configuracoes/gerais' },
-  { rotulo: 'Município', href: '/configuracoes/municipio' },
-  { rotulo: 'Secretarias', href: '/configuracoes/secretarias' },
-  { rotulo: 'Layout', href: '/configuracoes/layout' },
-  { rotulo: 'Usuários', href: '/configuracoes/usuarios' },
+const ABAS: { rotulo: string; href: string; modulo: ModuloSistema }[] = [
+  { rotulo: 'Gerais', href: '/configuracoes/gerais', modulo: 'ConfiguracoesGerais' },
+  { rotulo: 'Município', href: '/configuracoes/municipio', modulo: 'ConfiguracoesMunicipio' },
+  { rotulo: 'Secretarias', href: '/configuracoes/secretarias', modulo: 'ConfiguracoesSecretarias' },
+  { rotulo: 'Layout', href: '/configuracoes/layout', modulo: 'ConfiguracoesLayout' },
+  { rotulo: 'Usuários', href: '/configuracoes/usuarios', modulo: 'Usuarios' },
 ];
 
 export default function LayoutConfiguracoes({ children }: { children: React.ReactNode }) {
   const caminhoAtual = usePathname();
+  const { podeVer } = usarPermissoes();
+  const abasVisiveis = ABAS.filter((aba) => podeVer(aba.modulo));
 
   return (
     <div>
       <h1 className="mb-4 text-xl font-semibold">Configurações</h1>
 
       <div className="mb-6 flex flex-wrap gap-1 border-b border-neutral-200 print:hidden dark:border-neutral-800">
-        {ABAS.map((aba) => {
+        {abasVisiveis.map((aba) => {
           const ativa = caminhoAtual?.startsWith(aba.href);
           return (
             <Link

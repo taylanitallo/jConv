@@ -2,11 +2,13 @@ import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuar
 import { SupabaseClient } from '@supabase/supabase-js';
 import { IaService } from './ia.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 
 @Controller('ia')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Dashboard', 'Parcial')
 export class IaController {
   constructor(private readonly service: IaService) {}
 

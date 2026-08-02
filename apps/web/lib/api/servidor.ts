@@ -1,10 +1,16 @@
 import { cookies } from 'next/headers';
+import type { MapaPermissoes } from '@jconv/compartilhado';
 
 const URL_BASE_API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 export interface UsuarioAutenticado {
   id: string;
   email: string;
+}
+
+export interface SessaoAtual {
+  usuario: UsuarioAutenticado;
+  permissoes: MapaPermissoes;
 }
 
 export class ErroApiIndisponivel extends Error {
@@ -21,7 +27,7 @@ export class ErroApiIndisponivel extends Error {
 // Usado em Server Components/layouts: repassa os cookies da requisição recebida para a API
 // NestJS (fetch do servidor não tem acesso automático aos cookies do navegador) e retorna
 // null se a sessão estiver ausente/expirada, para o layout decidir redirecionar ao /login.
-export async function obterUsuarioAtual(): Promise<UsuarioAutenticado | null> {
+export async function obterUsuarioAtual(): Promise<SessaoAtual | null> {
   let resposta: Response;
 
   try {
@@ -41,5 +47,6 @@ export async function obterUsuarioAtual(): Promise<UsuarioAutenticado | null> {
   }
 
   const corpo = await resposta.json();
-  return corpo.usuario ?? null;
+  if (!corpo.usuario) return null;
+  return { usuario: corpo.usuario, permissoes: (corpo.permissoes ?? {}) as MapaPermissoes };
 }

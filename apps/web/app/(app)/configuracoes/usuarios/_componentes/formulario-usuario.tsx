@@ -3,8 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BarraAcoesFormulario } from '@jconv/compartilhado/componentes';
-import { PAPEIS_USUARIO, ROTULOS_PAPEL_USUARIO, type Secretaria, type Usuario } from '@jconv/compartilhado';
+import {
+  MODULOS_SISTEMA,
+  type MapaPermissoes,
+  type Secretaria,
+  type Usuario,
+} from '@jconv/compartilhado';
 import { secretariasApi, usuariosApi } from '../../../../../lib/api/recursos';
+import { ModalAtribuicoes } from './modal-atribuicoes';
 
 export interface FormularioUsuarioProps {
   usuario?: Usuario;
@@ -15,24 +21,35 @@ export function FormularioUsuario({ usuario }: FormularioUsuarioProps) {
   const [secretarias, setSecretarias] = useState<Secretaria[]>([]);
   const [nome, setNome] = useState(usuario?.nome ?? '');
   const [email, setEmail] = useState(usuario?.email ?? '');
-  const [papel, setPapel] = useState(usuario?.papel ?? PAPEIS_USUARIO[0]);
+  const [permissoes, setPermissoes] = useState<MapaPermissoes>({});
+  const [editandoAtribuicoes, setEditandoAtribuicoes] = useState(false);
   const [secretariaId, setSecretariaId] = useState(usuario?.secretariaId ?? '');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     secretariasApi.listar().then(setSecretarias);
-  }, []);
+    if (usuario) {
+      usuariosApi.listarPermissoes(usuario.id).then((linhas) =>
+        setPermissoes(Object.fromEntries(linhas.map((p) => [p.modulo, p.nivel])) as MapaPermissoes),
+      );
+    }
+  }, [usuario]);
 
   async function aoSalvar() {
     setErro(null);
     setSalvando(true);
     try {
-      if (usuario) {
-        await usuariosApi.atualizar(usuario.id, { nome, papel, secretariaId: secretariaId || null });
-      } else {
-        await usuariosApi.criar({ nome, email, papel, secretariaId: secretariaId || null });
-      }
+      // As atribuições vão numa chamada própria porque o usuário só existe depois do convite —
+      // no cadastro novo o id só aparece na resposta do criar.
+      const alvo = usuario
+        ? await usuariosApi.atualizar(usuario.id, { nome, secretariaId: secretariaId || null })
+        : await usuariosApi.criar({ nome, email, secretariaId: secretariaId || null });
+
+      await usuariosApi.definirPermissoes(
+        alvo.id,
+        MODULOS_SISTEMA.map((modulo) => ({ modulo, nivel: permissoes[modulo] ?? 'Nenhuma' })),
+      );
       roteador.push('/configuracoes/usuarios');
       roteador.refresh();
     } catch (excecao) {
@@ -70,18 +87,20 @@ export function FormularioUsuario({ usuario }: FormularioUsuarioProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium">Papel</label>
-        <select
-          value={papel}
-          onChange={(e) => setPapel(e.target.value as typeof papel)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800"
+        <label className="block text-sm font-medium">Atribuições</label>
+        <button
+          type="button"
+          onClick={() => setEditandoAtribuicoes(true)}
+          className="mt-1 flex w-full items-center justify-between rounded-md border border-neutral-300 px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
         >
-          {PAPEIS_USUARIO.map((v) => (
-            <option key={v} value={v}>
-              {ROTULOS_PAPEL_USUARIO[v]}
-            </option>
-          ))}
-        </select>
+          <span>
+            {MODULOS_SISTEMA.filter((m) => (permissoes[m] ?? 'Nenhuma') !== 'Nenhuma').length} de {MODULOS_SISTEMA.length} telas liberadas
+          </span>
+          <span className="text-blue-600 dark:text-blue-400">Definir →</span>
+        </button>
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          Sem permissão a tela nem aparece; parcial só permite consultar; total permite incluir, editar e excluir.
+        </p>
       </div>
 
       <div>
@@ -91,19 +110,20 @@ export function FormularioUsuario({ usuario }: FormularioUsuarioProps) {
           onChange={(e) => setSecretariaId(e.target.value)}
           className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800"
         >
-          <option value="">Nenhuma</option>
+          {/* Valor vazio = sem recorte por órgão. O rótulo diz "Todas" porque é isso que o
+              comportamento significa — "Nenhuma" sugeriria o oposto do que acontece. */}
+          <option value="">Todas as secretarias</option>
           {secretarias.map((s) => (
             <option key={s.id} value={s.id}>
               {s.nome}
             </option>
           ))}
         </select>
-        {papel === 'LeituraSecretario' && (
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-            Este perfil só enxerga os convênios dos órgãos vinculados à secretaria escolhida. Sem secretaria, não
-            enxerga nenhum. Os órgãos de cada secretaria são definidos na aba Secretarias.
-          </p>
-        )}
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {secretariaId
+            ? 'O usuário só enxerga os convênios dos órgãos vinculados a esta secretaria. Os órgãos de cada uma são definidos na aba Secretarias.'
+            : 'O usuário enxerga os convênios de todos os órgãos. O que ele consegue fazer em cada tela continua sendo definido pelas Atribuições.'}
+        </p>
       </div>
 
       {erro && <p className="text-sm text-red-600">{erro}</p>}
@@ -116,6 +136,18 @@ export function FormularioUsuario({ usuario }: FormularioUsuarioProps) {
         formularioSujo={nome !== (usuario?.nome ?? '')}
         desabilitarSalvar={!nome || (!usuario && !email)}
       />
+
+      {editandoAtribuicoes && (
+        <ModalAtribuicoes
+          nomeUsuario={nome}
+          valor={permissoes}
+          aoFechar={() => setEditandoAtribuicoes(false)}
+          aoConfirmar={(novas) => {
+            setPermissoes(novas);
+            setEditandoAtribuicoes(false);
+          }}
+        />
+      )}
     </div>
   );
 }

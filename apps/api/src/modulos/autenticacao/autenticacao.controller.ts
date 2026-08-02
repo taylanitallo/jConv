@@ -1,9 +1,16 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { esquemaLogin } from '@jconv/compartilhado';
+import { SupabaseClient } from '@supabase/supabase-js';
+import {
+  esquemaLogin,
+  type MapaPermissoes,
+  type ModuloSistema,
+  type NivelPermissao,
+} from '@jconv/compartilhado';
 import { AutenticacaoService } from './autenticacao.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { UsuarioAtual } from '../../comum/decoradores/usuario-atual.decorator';
+import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { ConfiguracaoService } from '../../configuracao/configuracao.service';
 import { NOME_COOKIE_ACCESS_TOKEN, NOME_COOKIE_REFRESH_TOKEN } from '../../comum/constantes';
@@ -48,10 +55,22 @@ export class AutenticacaoController {
     return { sucesso: true };
   }
 
+  // Devolve também as permissões do usuário: é com elas que o frontend decide o que mostrar no
+  // menu e quais botões de ação exibir. A barreira de verdade continua sendo a RLS.
   @Get('me')
   @UseGuards(AutenticacaoGuard)
-  eu(@UsuarioAtual() usuario: { id: string; email: string }) {
-    return { usuario };
+  async eu(@UsuarioAtual() usuario: { id: string; email: string }, @ClienteSupabase() cliente: SupabaseClient) {
+    const { data } = await cliente
+      .from('permissoes_usuario')
+      .select('modulo, nivel')
+      .eq('usuario_id', usuario.id);
+
+    const permissoes: MapaPermissoes = {};
+    for (const linha of data ?? []) {
+      permissoes[linha.modulo as ModuloSistema] = linha.nivel as NivelPermissao;
+    }
+
+    return { usuario, permissoes };
   }
 
   // Exposto só para o Supabase Realtime autenticar o canal do navegador (Fase 4 — Dashboard em

@@ -3,15 +3,16 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { esquemaCriarObservacaoConvenio } from '@jconv/compartilhado';
 import { ObservacoesService } from './observacoes.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
-import { Papeis } from '../../comum/decoradores/papeis.decorator';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { UsuarioAtual } from '../../comum/decoradores/usuario-atual.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('convenios/:convenioId/observacoes')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Convenios', 'Parcial')
 export class ObservacoesController {
   constructor(private readonly service: ObservacoesService) {}
 
@@ -22,7 +23,7 @@ export class ObservacoesController {
 
   // Sem @Patch e sem @Delete: o histórico é imutável (ver migration 0022).
   @Post()
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async criar(
     @ClienteSupabase() cliente: SupabaseClient,
     @UsuarioAtual() usuario: { id: string; email: string },

@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ROTULOS_PAPEL_USUARIO, type Usuario } from '@jconv/compartilhado';
+import type { Usuario } from '@jconv/compartilhado';
 import { usuariosApi } from '../../../../lib/api/recursos';
+import { usarPermissoes } from '../../_componentes/contexto-permissoes';
 
 export default function PaginaUsuarios() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('Usuarios');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [carregando, setCarregando] = useState(true);
 
@@ -28,12 +31,14 @@ export default function PaginaUsuarios() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Usuários</h1>
+        {podeAlterar && (
         <Link
           href="/configuracoes/usuarios/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Novo usuário
         </Link>
+        )}
       </div>
 
       {carregando ? (
@@ -45,7 +50,6 @@ export default function PaginaUsuarios() {
               <tr>
                 <th className="px-4 py-2 font-medium">Nome</th>
                 <th className="px-4 py-2 font-medium">E-mail</th>
-                <th className="px-4 py-2 font-medium">Papel</th>
                 <th className="px-4 py-2 font-medium">Status</th>
                 <th className="px-4 py-2" />
               </tr>
@@ -55,7 +59,6 @@ export default function PaginaUsuarios() {
                 <tr key={u.id} className="border-t border-neutral-200 dark:border-neutral-800">
                   <td className="px-4 py-2">{u.nome}</td>
                   <td className="px-4 py-2">{u.email}</td>
-                  <td className="px-4 py-2">{ROTULOS_PAPEL_USUARIO[u.papel]}</td>
                   <td className="px-4 py-2">
                     <span
                       className={
@@ -69,7 +72,7 @@ export default function PaginaUsuarios() {
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/configuracoes/usuarios/${u.id}`} className="mr-3 text-blue-600 hover:underline">
-                      Editar
+                      {podeAlterar ? 'Editar' : 'Ver'}
                     </Link>
                     <button type="button" onClick={() => alternarAtivo(u)} className="text-neutral-600 hover:underline dark:text-neutral-300">
                       {u.ativo ? 'Desativar' : 'Ativar'}
@@ -79,7 +82,7 @@ export default function PaginaUsuarios() {
               ))}
               {usuarios.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-neutral-500">
+                  <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
                     Nenhum usuário cadastrado.
                   </td>
                 </tr>

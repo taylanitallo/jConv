@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
 import { ROTULOS_ESFERA_CONVENIO, type OrgaoConcedente } from '@jconv/compartilhado';
 import { orgaosConcedentesApi } from '../../../lib/api/recursos';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 export default function PaginaOrgaosConcedentes() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('OrgaosConcedentes');
   const [orgaos, setOrgaos] = useState<OrgaoConcedente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [paraExcluir, setParaExcluir] = useState<OrgaoConcedente | null>(null);
@@ -38,12 +41,14 @@ export default function PaginaOrgaosConcedentes() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Órgãos Concedentes</h1>
+        {podeAlterar && (
         <Link
           href="/orgaos-concedentes/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Novo órgão
         </Link>
+        )}
       </div>
 
       {carregando ? (
@@ -67,8 +72,9 @@ export default function PaginaOrgaosConcedentes() {
                   <td className="px-4 py-2">{orgao.contato ?? '—'}</td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/orgaos-concedentes/${orgao.id}`} className="mr-3 text-blue-600 hover:underline">
-                      Editar
+                      {podeAlterar ? 'Editar' : 'Ver'}
                     </Link>
+                    {podeAlterar && (
                     <button
                       type="button"
                       onClick={() => setParaExcluir(orgao)}
@@ -76,6 +82,7 @@ export default function PaginaOrgaosConcedentes() {
                     >
                       Excluir
                     </button>
+                    )}
                   </td>
                 </tr>
               ))}

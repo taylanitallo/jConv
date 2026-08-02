@@ -3,14 +3,15 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { esquemaCriarDocumentoAnexo } from '@jconv/compartilhado';
 import { DocumentosAnexosService } from './documentos-anexos.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
-import { Papeis } from '../../comum/decoradores/papeis.decorator';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('documentos-anexos')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Convenios', 'Parcial')
 export class DocumentosAnexosController {
   constructor(private readonly service: DocumentosAnexosService) {}
 
@@ -25,7 +26,7 @@ export class DocumentosAnexosController {
   }
 
   @Post('upload-assinado')
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async criarUploadAssinado(@ClienteSupabase() cliente: SupabaseClient, @Body('nomeArquivo') nomeArquivo: unknown) {
     if (typeof nomeArquivo !== 'string' || !nomeArquivo.trim()) {
       throw new BadRequestException('Informe o nome do arquivo');
@@ -34,7 +35,7 @@ export class DocumentosAnexosController {
   }
 
   @Post()
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async registrar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaCriarDocumentoAnexo, corpo);
     return paraCamelCase(await this.service.registrarDocumento(cliente, dados));
@@ -46,7 +47,7 @@ export class DocumentosAnexosController {
   }
 
   @Delete(':id')
-  @Papeis('Administrador', 'GestorConvenios')
+  @Permissao('Convenios', 'Total')
   async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };

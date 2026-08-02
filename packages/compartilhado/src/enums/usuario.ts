@@ -1,9 +1,3 @@
-export const PAPEIS_USUARIO = ['Administrador', 'GestorConvenios', 'Financeiro', 'LeituraSecretario'] as const;
-export type PapelUsuario = (typeof PAPEIS_USUARIO)[number];
-
-export const ROTULOS_PAPEL_USUARIO: Record<PapelUsuario, string> = {
-  Administrador: 'Administrador',
-  GestorConvenios: 'Gestor de Convênios',
-  Financeiro: 'Financeiro',
-  LeituraSecretario: 'Leitura/Secretário',
-};
+// Os papéis fixos (Administrador, GestorConvenios, Financeiro, LeituraSecretario) foram
+// substituídos por permissões por módulo — ver enums/permissao.ts e a migration 0026.
+export {};

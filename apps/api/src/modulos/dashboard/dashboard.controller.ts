@@ -2,12 +2,14 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { DashboardService } from './dashboard.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('dashboard')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Dashboard', 'Parcial')
 export class DashboardController {
   constructor(private readonly service: DashboardService) {}
 

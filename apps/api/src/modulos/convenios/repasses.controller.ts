@@ -3,14 +3,15 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { esquemaAtualizarRepasse, esquemaCriarRepasse } from '@jconv/compartilhado';
 import { RepassesService } from './repasses.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
-import { Papeis } from '../../comum/decoradores/papeis.decorator';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('convenios/:convenioId/repasses')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Convenios', 'Parcial')
 export class RepassesController {
   constructor(private readonly service: RepassesService) {}
 
@@ -20,7 +21,7 @@ export class RepassesController {
   }
 
   @Post()
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async criar(
     @ClienteSupabase() cliente: SupabaseClient,
     @Param('convenioId') convenioId: string,
@@ -31,14 +32,14 @@ export class RepassesController {
   }
 
   @Patch(':id')
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarRepasse, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Delete(':id')
-  @Papeis('Administrador', 'GestorConvenios')
+  @Permissao('Convenios', 'Total')
   async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };

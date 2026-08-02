@@ -2,12 +2,14 @@ import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/c
 import { SupabaseClient } from '@supabase/supabase-js';
 import { desembrulhar } from '../../comum/supabase-erro';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('alertas')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Convenios', 'Parcial')
 export class AlertasController {
   @Get()
   async listar(@ClienteSupabase() cliente: SupabaseClient, @Query('status') status?: string) {

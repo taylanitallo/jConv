@@ -13,3 +13,4 @@ export * from './documento-anexo';
 export * from './observacao-convenio';
 export * from './configuracao';
 export * from './secretaria';
+export * from './permissao';

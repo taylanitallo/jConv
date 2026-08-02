@@ -1,12 +1,9 @@
-import { PapelUsuario } from '../enums/usuario';
-
 export interface Usuario {
   id: string;
   nome: string;
   email: string;
-  papel: PapelUsuario;
   ativo: boolean;
-  /** Secretaria do usuário; define o escopo de órgãos do perfil LeituraSecretario. */
+  /** Secretaria do usuário. Quem tem secretaria só enxerga os órgãos dela; quem não tem, todos. */
   secretariaId: string | null;
   criadoEm: string;
   atualizadoEm: string;

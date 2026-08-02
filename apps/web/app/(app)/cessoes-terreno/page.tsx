@@ -5,8 +5,11 @@ import { useEffect, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
 import { ROTULOS_STATUS_CESSAO_TERRENO, type CessaoTerreno } from '@jconv/compartilhado';
 import { cessoesTerrenoApi } from '../../../lib/api/recursos';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 export default function PaginaCessoesTerreno() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('CessoesTerreno');
   const [itens, setItens] = useState<CessaoTerreno[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [paraExcluir, setParaExcluir] = useState<CessaoTerreno | null>(null);
@@ -38,12 +41,14 @@ export default function PaginaCessoesTerreno() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Cessões de Terreno</h1>
+        {podeAlterar && (
         <Link
           href="/cessoes-terreno/novo"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Nova cessão
         </Link>
+        )}
       </div>
 
       {carregando ? (
@@ -67,7 +72,7 @@ export default function PaginaCessoesTerreno() {
                   <td className="px-4 py-2">{item.responsavelInterno ?? '—'}</td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/cessoes-terreno/${item.id}`} className="mr-3 text-blue-600 hover:underline">
-                      Editar
+                      {podeAlterar ? 'Editar' : 'Ver'}
                     </Link>
                     <button type="button" onClick={() => setParaExcluir(item)} className="text-red-600 hover:underline">
                       Excluir

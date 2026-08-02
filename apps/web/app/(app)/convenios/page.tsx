@@ -15,6 +15,7 @@ import { chamarApi } from '../../../lib/api/cliente';
 import { orgaosConcedentesApi } from '../../../lib/api/recursos';
 import { abrirRelatorioConsolidado } from '../../../lib/api/relatorios';
 import { ModalOrientacaoPdf } from '../_componentes/modal-orientacao-pdf';
+import { usarPermissoes } from '../_componentes/contexto-permissoes';
 
 function formatarMoeda(valor: number | null) {
   if (valor == null) return '—';
@@ -29,6 +30,8 @@ const CORES_BADGE: Record<string, string> = {
 };
 
 export default function PaginaConvenios() {
+  const { podeEditar } = usarPermissoes();
+  const podeAlterar = podeEditar('Convenios');
   const [itens, setItens] = useState<Convenio[]>([]);
   const [orgaos, setOrgaos] = useState<OrgaoConcedente[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -73,12 +76,14 @@ export default function PaginaConvenios() {
           >
             Exportar PDF
           </button>
+          {podeAlterar && (
           <Link
             href="/convenios/novo"
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Novo convênio
           </Link>
+          )}
         </div>
       </div>
 
@@ -167,7 +172,7 @@ export default function PaginaConvenios() {
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link href={`/convenios/${item.id}`} className="text-blue-600 hover:underline">
-                      Ver/editar
+                      {podeAlterar ? 'Ver/editar' : 'Ver'}
                     </Link>
                   </td>
                 </tr>

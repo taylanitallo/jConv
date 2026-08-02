@@ -27,7 +27,7 @@ export class AutenticacaoService {
       throw new UnauthorizedException('E-mail ou senha inválidos');
     }
 
-    // Usuario desativado (papel Administrador desativa acesso sem apagar histórico): checagem
+    // Usuario desativado (desativar preserva o histórico em vez de apagar o cadastro): checagem
     // via cliente admin, já que o próprio usuário desativado não teria como se auto-consultar.
     const { data: perfil, error: erroPerfil } = await this.supabaseAdmin
       .from('usuarios')

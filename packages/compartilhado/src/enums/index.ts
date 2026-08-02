@@ -10,3 +10,4 @@ export * from './repasse';
 export * from './documento-anexo';
 export * from './alerta';
 export * from './configuracao';
+export * from './permissao';

@@ -2,26 +2,41 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ModuloSistema } from '@jconv/compartilhado';
+import { usarPermissoes } from './contexto-permissoes';
 
-const ITENS_NAVEGACAO = [
-  { rotulo: 'Dashboard', href: '/' },
-  { rotulo: 'Convênios', href: '/convenios' },
-  { rotulo: 'Propostas', href: '/propostas' },
-  { rotulo: 'Cessões de Terreno', href: '/cessoes-terreno' },
-  { rotulo: 'Limites de Custeio', href: '/limites-custeio' },
-  { rotulo: 'Órgãos Concedentes', href: '/orgaos-concedentes' },
-  { rotulo: 'Empresas Contratadas', href: '/empresas-contratadas' },
-  // Usuários virou aba dentro de Configurações.
-  { rotulo: 'Configurações', href: '/configuracoes' },
+// Cada item exige ver pelo menos um módulo. Configurações é o guarda-chuva das cinco abas:
+// aparece se o usuário enxergar qualquer uma delas.
+const ITENS_NAVEGACAO: { rotulo: string; href: string; modulos: ModuloSistema[] }[] = [
+  { rotulo: 'Dashboard', href: '/', modulos: ['Dashboard'] },
+  { rotulo: 'Convênios', href: '/convenios', modulos: ['Convenios'] },
+  { rotulo: 'Propostas', href: '/propostas', modulos: ['Propostas'] },
+  { rotulo: 'Cessões de Terreno', href: '/cessoes-terreno', modulos: ['CessoesTerreno'] },
+  { rotulo: 'Limites de Custeio', href: '/limites-custeio', modulos: ['LimitesCusteio'] },
+  { rotulo: 'Órgãos Concedentes', href: '/orgaos-concedentes', modulos: ['OrgaosConcedentes'] },
+  { rotulo: 'Empresas Contratadas', href: '/empresas-contratadas', modulos: ['EmpresasContratadas'] },
+  {
+    rotulo: 'Configurações',
+    href: '/configuracoes',
+    modulos: [
+      'ConfiguracoesGerais',
+      'ConfiguracoesMunicipio',
+      'ConfiguracoesSecretarias',
+      'ConfiguracoesLayout',
+      'Usuarios',
+    ],
+  },
 ];
 
 export function NavegacaoLateral() {
   const caminhoAtual = usePathname();
+  const { podeVer } = usarPermissoes();
+  const itensVisiveis = ITENS_NAVEGACAO.filter((item) => item.modulos.some(podeVer));
 
   return (
     <nav className="w-56 shrink-0 border-r border-neutral-200 p-4 print:hidden dark:border-neutral-800">
       <ul className="space-y-1">
-        {ITENS_NAVEGACAO.map((item) => {
+        {itensVisiveis.map((item) => {
           const ativo = item.href === '/' ? caminhoAtual === '/' : caminhoAtual?.startsWith(item.href);
           return (
             <li key={item.href}>

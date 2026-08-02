@@ -14,6 +14,8 @@ import type {
   Secretaria,
   ConfiguracaoSistema,
   AtualizarConfiguracao,
+  ModuloSistema,
+  NivelPermissao,
 } from '@jconv/compartilhado';
 import { chamarApi } from './cliente';
 
@@ -34,7 +36,16 @@ export const convenioApi = recurso<Convenio, Record<string, unknown>>('/convenio
 export const propostasApi = recurso<Proposta, Record<string, unknown>>('/propostas');
 export const cessoesTerrenoApi = recurso<CessaoTerreno, Record<string, unknown>>('/cessoes-terreno');
 export const limitesCusteioApi = recurso<LimiteCusteio, Record<string, unknown>>('/limites-custeio');
-export const usuariosApi = recurso<Usuario, Record<string, unknown>>('/usuarios');
+export const usuariosApi = {
+  ...recurso<Usuario, Record<string, unknown>>('/usuarios'),
+  listarPermissoes: (id: string) =>
+    chamarApi<{ modulo: ModuloSistema; nivel: NivelPermissao }[]>(`/usuarios/${id}/permissoes`),
+  definirPermissoes: (id: string, permissoes: { modulo: ModuloSistema; nivel: NivelPermissao }[]) =>
+    chamarApi<{ modulo: ModuloSistema; nivel: NivelPermissao }[]>(`/usuarios/${id}/permissoes`, {
+      method: 'PUT',
+      body: JSON.stringify({ permissoes }),
+    }),
+};
 
 export const propostasExtra = {
   promover: (id: string, dados: Record<string, unknown>) =>

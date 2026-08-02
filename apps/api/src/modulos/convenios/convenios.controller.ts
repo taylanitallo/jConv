@@ -3,14 +3,15 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { esquemaAtualizarConvenio, esquemaCriarConvenio } from '@jconv/compartilhado';
 import { ConveniosService } from './convenios.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
-import { Papeis } from '../../comum/decoradores/papeis.decorator';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('convenios')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
+@Permissao('Convenios', 'Parcial')
 export class ConveniosController {
   constructor(private readonly service: ConveniosService) {}
 
@@ -33,21 +34,21 @@ export class ConveniosController {
   }
 
   @Post()
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async criar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaCriarConvenio, corpo);
     return paraCamelCase(await this.service.criar(cliente, dados));
   }
 
   @Patch(':id')
-  @Papeis('Administrador', 'GestorConvenios', 'Financeiro')
+  @Permissao('Convenios', 'Total')
   async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarConvenio, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Delete(':id')
-  @Papeis('Administrador', 'GestorConvenios')
+  @Permissao('Convenios', 'Total')
   async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { ErroApiIndisponivel, obterUsuarioAtual } from '../../lib/api/servidor';
 import { AvisoApiIndisponivel } from './_componentes/aviso-api-indisponivel';
+import { ProvedorPermissoes } from './_componentes/contexto-permissoes';
 import { BotaoSair } from './_componentes/botao-sair';
 import { NavegacaoLateral } from './_componentes/navegacao-lateral';
 
@@ -8,13 +9,13 @@ import { NavegacaoLateral } from './_componentes/navegacao-lateral';
 export const dynamic = 'force-dynamic';
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
-  let usuario;
+  let sessao;
 
   // Tratado aqui, e não por um error.tsx: um error boundary não captura o que é lançado pelo
   // layout do próprio segmento, e o da raiz também não pega este caso — verificado em produção,
   // onde a página caía no fallback interno do Next (<html id="__next_error__">).
   try {
-    usuario = await obterUsuarioAtual();
+    sessao = await obterUsuarioAtual();
   } catch (erro) {
     if (erro instanceof ErroApiIndisponivel) {
       return <AvisoApiIndisponivel detalhe={erro.message} />;
@@ -22,16 +23,17 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
     throw erro;
   }
 
-  if (!usuario) {
+  if (!sessao) {
     redirect('/login');
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <ProvedorPermissoes permissoes={sessao.permissoes}>
+      <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between border-b border-neutral-200 px-6 py-3 print:hidden dark:border-neutral-800">
         <span className="font-semibold">jConv</span>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">{usuario.email}</span>
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">{sessao.usuario.email}</span>
           <BotaoSair />
         </div>
       </header>
@@ -39,6 +41,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
         <NavegacaoLateral />
         <main className="flex-1 p-6">{children}</main>
       </div>
-    </div>
+      </div>
+    </ProvedorPermissoes>
   );
 }

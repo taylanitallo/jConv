@@ -3,14 +3,14 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { esquemaAtualizarConfiguracao } from '@jconv/compartilhado';
 import { ConfiguracoesService } from './configuracoes.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
-import { PapeisGuard } from '../../guardas/papeis.guard';
-import { Papeis } from '../../comum/decoradores/papeis.decorator';
+import { PermissoesGuard } from '../../guardas/permissoes.guard';
+import { Permissao } from '../../comum/decoradores/permissao.decorator';
 import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
 @Controller('configuracoes')
-@UseGuards(AutenticacaoGuard, PapeisGuard)
+@UseGuards(AutenticacaoGuard, PermissoesGuard)
 export class ConfiguracoesController {
   constructor(private readonly service: ConfiguracoesService) {}
 
@@ -22,7 +22,9 @@ export class ConfiguracoesController {
   }
 
   @Patch()
-  @Papeis('Administrador')
+  // A linha de configuração cobre as abas Gerais, Município e Layout: basta Total em uma
+  // delas. A separação por aba é feita na tela.
+  @Permissao(['ConfiguracoesGerais', 'ConfiguracoesMunicipio', 'ConfiguracoesLayout'], 'Total')
   async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarConfiguracao, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, dados));
