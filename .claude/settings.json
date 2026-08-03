@@ -5,7 +5,13 @@
       "PowerShell(Get-Process -Id 24232,25668 -ErrorAction SilentlyContinue)",
       "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=24232 or ProcessId=25668\" | Select-Object ProcessId, @{n='Cmd';e={$_.CommandLine}}, @{n='Cwd';e={$_.ExecutablePath}} | Format-List)",
       "PowerShell(Stop-Process -Id 24232,25668 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 800; Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,3001,3333 } | Select-Object LocalPort, OwningProcess)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(railway variables *)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; \"api parada\")",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('./apps/api/package.json'\\).scripts\\).join\\(', '\\)\\)\")",
+      "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/testar-superadmin.js\")",
+      "Bash(node scripts/clientes.js remover zz-teste-cidade)",
+      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 3001,3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force }')"
     ]
   }
 }

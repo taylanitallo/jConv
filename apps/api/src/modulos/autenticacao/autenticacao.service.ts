@@ -1,7 +1,7 @@
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { SupabaseClient, createClient } from '@supabase/supabase-js';
+import { ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { createClient } from '@supabase/supabase-js';
 import { ConfiguracaoService } from '../../configuracao/configuracao.service';
-import { SUPABASE_ADMIN_CLIENT } from '../../configuracao/supabase.provider';
+import { BancoService } from '../../banco/banco.service';
 
 export interface SessaoAutenticada {
   accessToken: string;
@@ -11,34 +11,61 @@ export interface SessaoAutenticada {
   email: string;
 }
 
+export interface OrigemAcesso {
+  ip?: string;
+  agente?: string;
+}
+
 @Injectable()
 export class AutenticacaoService {
+  private readonly logger = new Logger(AutenticacaoService.name);
+
   constructor(
     private readonly configuracao: ConfiguracaoService,
-    @Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient,
+    private readonly banco: BancoService,
   ) {}
 
-  async entrar(email: string, senha: string): Promise<SessaoAutenticada> {
-    const clienteAnonimo = createClient(this.configuracao.supabaseUrl, this.configuracao.supabaseAnonKey);
+  async entrar(email: string, senha: string, slug: string, origem: OrigemAcesso = {}): Promise<SessaoAutenticada> {
+    const registrar = (sucesso: boolean, motivo: string | null, usuarioId: string | null) =>
+      this.registrarAcesso({ email, slug, sucesso, motivo, usuarioId, ...origem });
 
+    let municipio;
+    try {
+      municipio = await this.banco.obterClientePorSlug(slug);
+    } catch (erro) {
+      await registrar(false, 'município inválido ou inativo', null);
+      throw erro instanceof NotFoundException ? erro : new NotFoundException('Município não encontrado');
+    }
+
+    const clienteAnonimo = createClient(this.configuracao.supabaseUrl, this.configuracao.supabaseAnonKey);
     const { data, error } = await clienteAnonimo.auth.signInWithPassword({ email, password: senha });
 
     if (error || !data.session || !data.user) {
+      await registrar(false, 'e-mail ou senha inválidos', null);
       throw new UnauthorizedException('E-mail ou senha inválidos');
     }
 
-    // Usuario desativado (desativar preserva o histórico em vez de apagar o cadastro): checagem
-    // via cliente admin, já que o próprio usuário desativado não teria como se auto-consultar.
-    const { data: perfil, error: erroPerfil } = await this.supabaseAdmin
-      .from('usuarios')
-      .select('ativo')
-      .eq('id', data.user.id)
-      .maybeSingle();
+    // O cadastro do usuário vive no schema do município, não em public — e a conta do Supabase
+    // Auth é global. Sem esta checagem, quem tem login em uma prefeitura entraria em qualquer
+    // outra só trocando o slug na URL.
+    const perfil = await this.banco.executarComoDono(municipio.schemaNome, async (executar) => {
+      const { rows } = await executar('SELECT ativo FROM usuarios WHERE id = $1', [data.user.id]);
+      return rows[0] as { ativo: boolean } | undefined;
+    });
 
-    if (erroPerfil || !perfil || !perfil.ativo) {
+    if (!perfil) {
       await clienteAnonimo.auth.signOut();
+      await registrar(false, 'sem cadastro neste município', data.user.id);
+      throw new ForbiddenException(`Você não tem acesso ao município de ${municipio.nomeMunicipio}.`);
+    }
+
+    if (!perfil.ativo) {
+      await clienteAnonimo.auth.signOut();
+      await registrar(false, 'usuário desativado', data.user.id);
       throw new ForbiddenException('Usuário sem acesso ao sistema. Contate um administrador.');
     }
+
+    await registrar(true, null, data.user.id);
 
     return {
       accessToken: data.session.access_token,
@@ -47,5 +74,34 @@ export class AutenticacaoService {
       usuarioId: data.user.id,
       email: data.user.email ?? email,
     };
+  }
+
+  /** Falha ao registrar não pode impedir alguém de entrar — só vira log. */
+  private async registrarAcesso(dados: {
+    email: string;
+    slug: string;
+    sucesso: boolean;
+    motivo: string | null;
+    usuarioId: string | null;
+    ip?: string;
+    agente?: string;
+  }) {
+    try {
+      await this.banco.consultarMestre(
+        `INSERT INTO public.acessos (email, usuario_id, cliente_slug, sucesso, motivo, ip, agente)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          dados.email,
+          dados.usuarioId,
+          dados.slug,
+          dados.sucesso,
+          dados.motivo,
+          dados.ip ?? null,
+          dados.agente?.slice(0, 300) ?? null,
+        ],
+      );
+    } catch (erro) {
+      this.logger.warn(`não foi possível registrar o acesso: ${(erro as Error).message}`);
+    }
   }
 }

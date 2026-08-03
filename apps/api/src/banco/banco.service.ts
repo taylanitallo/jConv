@@ -142,6 +142,32 @@ export class BancoService implements OnModuleDestroy {
     };
   }
 
+  /**
+   * Roda no schema de um município SEM trocar de papel — ou seja, por cima da RLS.
+   *
+   * É o que o superadmin precisa (listar usuários de qualquer prefeitura, tirar backup,
+   * restaurar) e é exatamente o que nenhuma rota de município pode alcançar. Só o
+   * SuperadminGuard abre esta porta; tudo mais passa por abrirSessao().
+   */
+  async executarComoDono<T>(
+    schemaNome: string,
+    tarefa: (executar: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>) => Promise<T>,
+  ): Promise<T> {
+    const conexao = await this.pool.connect();
+    try {
+      await conexao.query('BEGIN');
+      await conexao.query(`SET LOCAL search_path = "${this.validarSchema(schemaNome)}", extensions`);
+      const resultado = await tarefa((sql, params) => conexao.query(sql, params));
+      await conexao.query('COMMIT');
+      return resultado;
+    } catch (erro) {
+      await conexao.query('ROLLBACK').catch(() => undefined);
+      throw erro;
+    } finally {
+      conexao.release();
+    }
+  }
+
   /** O nome vem do cadastro, não do usuário, mas é interpolado em SQL — confere assim mesmo. */
   private validarSchema(schema: string): string {
     if (!/^mun_[a-z0-9_]{1,50}$/.test(schema)) throw new Error(`schema inválido: ${schema}`);

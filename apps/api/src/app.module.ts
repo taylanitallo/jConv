@@ -17,6 +17,7 @@ import { AlertasModule } from './modulos/alertas/alertas.module';
 import { RelatoriosModule } from './modulos/relatorios/relatorios.module';
 import { IaModule } from './modulos/ia/ia.module';
 import { ConfiguracoesModuloModule } from './modulos/configuracoes/configuracoes-modulo.module';
+import { SuperadminModule } from './modulos/superadmin/superadmin.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ConfiguracoesModuloModule } from './modulos/configuracoes/configuracoes
     RelatoriosModule,
     IaModule,
     ConfiguracoesModuloModule,
+    SuperadminModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -45,7 +47,9 @@ export class AppModule implements NestModule {
     // Auth; o resto da API é sempre dentro de um município.
     consumidor
       .apply(TenantMiddleware)
-      .exclude('auth/login', 'auth/logout', 'saude')
+      // O superadmin fica fora: ele trabalha no schema mestre e atravessa municipios, entao
+      // nao existe 'o municipio da requisicao' nessas rotas.
+      .exclude('auth/login', 'auth/logout', 'saude', 'superadmin/(.*)')
       .forRoutes('*');
   }
 }

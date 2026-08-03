@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ClienteDados } from '../../banco/cliente-dados';
 import {
@@ -24,9 +24,24 @@ export class AutenticacaoController {
 
   @Post('login')
   @HttpCode(200)
-  async entrar(@Body() corpo: unknown, @Res({ passthrough: true }) resposta: Response) {
+  async entrar(
+    @Body() corpo: unknown,
+    @Req() requisicao: Request,
+    @Res({ passthrough: true }) resposta: Response,
+  ) {
     const { email, senha } = validarComEsquema(esquemaLogin, corpo);
-    const sessao = await this.autenticacaoService.entrar(email, senha);
+
+    // O login é a única rota autenticada fora do TenantMiddleware — ainda não há sessão para
+    // abrir — então o slug é lido aqui mesmo.
+    const cabecalho = requisicao.headers['x-municipio'];
+    const slug = (Array.isArray(cabecalho) ? cabecalho[0] : cabecalho)?.trim().toLowerCase();
+    if (!slug) throw new BadRequestException('Município não informado na requisição');
+
+    const sessao = await this.autenticacaoService.entrar(email, senha, slug, {
+      // Atrás do proxy da Vercel/Railway o IP real vem no X-Forwarded-For; req.ip seria o do proxy.
+      ip: (requisicao.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? requisicao.ip,
+      agente: requisicao.headers['user-agent'],
+    });
 
     // Em produção, web (Vercel) e api (Railway) ficam em domínios diferentes, então o cookie
     // precisa de SameSite=None (exige Secure=true) para ser enviado nas requisições cross-site;
