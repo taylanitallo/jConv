@@ -53,14 +53,16 @@ export class AutenticacaoService {
       return rows[0] as { ativo: boolean } | undefined;
     });
 
+    // Nada de signOut() ao recusar. O signOut do Supabase revoga TODAS as sessões da conta, não
+    // só a que acabou de nascer aqui: com vários municípios, tentar entrar por engano no
+    // município errado derrubava a sessão que a pessoa já tinha aberta no município certo.
+    // Os tokens desta tentativa nunca saem daqui — não viram cookie, ninguém os recebe.
     if (!perfil) {
-      await clienteAnonimo.auth.signOut();
       await registrar(false, 'sem cadastro neste município', data.user.id);
       throw new ForbiddenException(`Você não tem acesso ao município de ${municipio.nomeMunicipio}.`);
     }
 
     if (!perfil.ativo) {
-      await clienteAnonimo.auth.signOut();
       await registrar(false, 'usuário desativado', data.user.id);
       throw new ForbiddenException('Usuário sem acesso ao sistema. Contate um administrador.');
     }
