@@ -14,12 +14,14 @@ import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decora
 import { validarComEsquema } from '../../comum/validar';
 import { ConfiguracaoService } from '../../configuracao/configuracao.service';
 import { NOME_COOKIE_ACCESS_TOKEN, NOME_COOKIE_REFRESH_TOKEN } from '../../comum/constantes';
+import { BancoService } from '../../banco/banco.service';
 
 @Controller('auth')
 export class AutenticacaoController {
   constructor(
     private readonly autenticacaoService: AutenticacaoService,
     private readonly configuracao: ConfiguracaoService,
+    private readonly banco: BancoService,
   ) {}
 
   @Post('login')
@@ -85,7 +87,15 @@ export class AutenticacaoController {
       permissoes[linha.modulo as ModuloSistema] = linha.nivel as NivelPermissao;
     }
 
-    return { usuario, permissoes };
+    // Consultado no schema mestre, fora da sessão do município: é lá que vive a lista, e nenhuma
+    // sessão de prefeitura alcança essa tabela. Serve só para o menu decidir se mostra a entrada
+    // da administração — quem barra de verdade é o SuperadminGuard em cada rota.
+    const superadmin = await this.banco.consultarMestre(
+      'SELECT 1 FROM public.superadmins WHERE usuario_id = $1',
+      [usuario.id],
+    );
+
+    return { usuario, permissoes, superadmin: superadmin.length > 0 };
   }
 
   // Exposto só para o Supabase Realtime autenticar o canal do navegador (Fase 4 — Dashboard em

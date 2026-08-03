@@ -34,7 +34,7 @@ export default async function LayoutApp({
   }
 
   return (
-    <ProvedorPermissoes permissoes={sessao.permissoes}>
+    <ProvedorPermissoes permissoes={sessao.permissoes} superadmin={sessao.superadmin}>
       <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between border-b border-neutral-200 px-6 py-3 print:hidden dark:border-neutral-800">
         <span className="font-semibold">jConv</span>

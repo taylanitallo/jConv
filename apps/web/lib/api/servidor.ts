@@ -11,6 +11,8 @@ export interface UsuarioAutenticado {
 export interface SessaoAtual {
   usuario: UsuarioAutenticado;
   permissoes: MapaPermissoes;
+  /** Administra os municipios (public.superadmins). So decide o que o menu mostra. */
+  superadmin: boolean;
 }
 
 export class ErroApiIndisponivel extends Error {
@@ -51,5 +53,9 @@ export async function obterUsuarioAtual(): Promise<SessaoAtual | null> {
 
   const corpo = await resposta.json();
   if (!corpo.usuario) return null;
-  return { usuario: corpo.usuario, permissoes: (corpo.permissoes ?? {}) as MapaPermissoes };
+  return {
+    usuario: corpo.usuario,
+    permissoes: (corpo.permissoes ?? {}) as MapaPermissoes,
+    superadmin: corpo.superadmin === true,
+  };
 }

@@ -32,7 +32,7 @@ const ITENS_NAVEGACAO: { rotulo: string; href: string; modulos: ModuloSistema[] 
 export function NavegacaoLateral() {
   const rota = usarRota();
   const caminhoAtual = usePathname();
-  const { podeVer } = usarPermissoes();
+  const { podeVer, superadmin } = usarPermissoes();
   const itensVisiveis = ITENS_NAVEGACAO.filter((item) => item.modulos.some(podeVer));
 
   return (
@@ -56,6 +56,24 @@ export function NavegacaoLateral() {
           );
         })}
       </ul>
+
+      {/* Fora da lista e sem prefixo de município de propósito: a administração não pertence a
+          nenhuma prefeitura. Aparece só para quem está em public.superadmins — e mesmo que
+          alguém force a URL, o SuperadminGuard recusa na API. */}
+      {superadmin && (
+        <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+          <Link
+            href="/superadmin"
+            className={
+              caminhoAtual?.startsWith('/superadmin')
+                ? 'block rounded-md bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                : 'block rounded-md px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800'
+            }
+          >
+            Administração do sistema
+          </Link>
+        </div>
+      )}
     </nav>
   );
 }

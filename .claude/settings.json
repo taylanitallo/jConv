@@ -19,7 +19,8 @@
       "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/verificar-producao.js\")",
       "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/criar-conta.js\" \"taylan@jeossistemasss.com\" \"12954768\" \"Taylan Itallo\")",
       "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/testar-login.js\" \"taylan@jeossistemasss.com\" \"12954768\")",
-      "Bash(node scripts/clientes.js remover zz-vizinha)"
+      "Bash(node scripts/clientes.js remover zz-vizinha)",
+      "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/testar-sessao.js\")"
     ]
   }
 }
