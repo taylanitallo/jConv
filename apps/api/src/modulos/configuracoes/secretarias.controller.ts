@@ -25,11 +25,6 @@ export class SecretariasController {
     return paraCamelCase(await this.service.obter(cliente, id));
   }
 
-  @Get(':id/orgaos')
-  async listarOrgaos(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
-    return paraCamelCase(await this.service.listarOrgaos(cliente, id));
-  }
-
   @Post()
   @Permissao('ConfiguracoesSecretarias', 'Total')
   async criar(@ClienteSupabase() cliente: ClienteDados, @Body() corpo: unknown) {

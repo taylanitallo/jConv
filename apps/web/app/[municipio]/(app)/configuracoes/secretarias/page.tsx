@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { ModalConfirmacaoExclusao } from '@jconv/compartilhado/componentes';
-import type { OrgaoConcedente, Secretaria } from '@jconv/compartilhado';
-import { orgaosConcedentesApi, secretariasApi } from '@/lib/api/recursos';
+import type { Secretaria } from '@jconv/compartilhado';
+import { secretariasApi } from '@/lib/api/recursos';
 import { FormularioSecretaria } from './_componentes/formulario-secretaria';
 
 export default function AbaSecretarias() {
   const [itens, setItens] = useState<Secretaria[]>([]);
-  const [orgaos, setOrgaos] = useState<OrgaoConcedente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [emEdicao, setEmEdicao] = useState<Secretaria | 'nova' | null>(null);
   const [paraExcluir, setParaExcluir] = useState<Secretaria | null>(null);
@@ -16,9 +15,7 @@ export default function AbaSecretarias() {
 
   async function carregar() {
     setCarregando(true);
-    const [lista, listaOrgaos] = await Promise.all([secretariasApi.listar(), orgaosConcedentesApi.listar()]);
-    setItens(lista);
-    setOrgaos(listaOrgaos);
+    setItens(await secretariasApi.listar());
     setCarregando(false);
   }
 
@@ -42,7 +39,6 @@ export default function AbaSecretarias() {
     return (
       <FormularioSecretaria
         secretaria={emEdicao === 'nova' ? undefined : emEdicao}
-        orgaos={orgaos}
         aoSair={() => setEmEdicao(null)}
         aoSalvar={async () => {
           setEmEdicao(null);
@@ -56,8 +52,8 @@ export default function AbaSecretarias() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Secretarias do município. Os órgãos vinculados a cada uma definem o que os usuários com perfil
-          &ldquo;Leitura Secretário&rdquo; conseguem enxergar.
+          Secretarias do município. O responsável por cada uma e o alcance sobre convênios são definidos
+          no cadastro do usuário e no do convênio, não aqui.
         </p>
         <button
           type="button"
@@ -77,8 +73,6 @@ export default function AbaSecretarias() {
               <tr>
                 <th className="px-4 py-2 font-medium">Nome</th>
                 <th className="px-4 py-2 font-medium">Sigla</th>
-                <th className="px-4 py-2 font-medium">Secretário(a)</th>
-                <th className="px-4 py-2 font-medium">Contato</th>
                 <th className="px-4 py-2 font-medium">Status</th>
                 <th className="px-4 py-2" />
               </tr>
@@ -88,8 +82,6 @@ export default function AbaSecretarias() {
                 <tr key={item.id} className="border-t border-neutral-200 dark:border-neutral-800">
                   <td className="px-4 py-2">{item.nome}</td>
                   <td className="px-4 py-2">{item.sigla ?? '—'}</td>
-                  <td className="px-4 py-2">{item.secretarioResponsavel ?? '—'}</td>
-                  <td className="px-4 py-2">{item.contato ?? '—'}</td>
                   <td className="px-4 py-2">
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -121,7 +113,7 @@ export default function AbaSecretarias() {
               ))}
               {itens.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-neutral-500">
+                  <td colSpan={4} className="px-4 py-6 text-center text-neutral-500">
                     Nenhuma secretaria cadastrada ainda.
                   </td>
                 </tr>

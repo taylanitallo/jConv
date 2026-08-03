@@ -74,7 +74,6 @@ export const repassesApi = {
 
 export const secretariasApi = {
   ...recurso<Secretaria, Record<string, unknown>>('/secretarias'),
-  listarOrgaos: (id: string) => chamarApi<{ orgaoConcedenteId: string }[]>(`/secretarias/${id}/orgaos`),
 };
 
 // Linha única: só ler e atualizar (ver migration 0024).
