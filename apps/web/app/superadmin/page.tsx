@@ -1,84 +1,43 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Archive, Building, CheckCircle, Plus, RefreshCw, XCircle } from 'lucide-react';
 import { chamarSuperadmin, type ClienteMunicipio } from '@/lib/api/superadmin';
-import {
-  ACAO_TABELA,
-  AVISO_ERRO,
-  AVISO_SUCESSO,
-  BOTAO_PRIMARIO,
-  BOTAO_SECUNDARIO,
-  CABECALHO_TABELA,
-  CAMPO,
-  CARTAO,
-  CARTAO_LISTA,
-  LINHA_TABELA,
-  RODAPE_EXPLICATIVO,
-  ROTULO,
-  etiqueta,
-} from './_componentes/estilos';
+import { CartaoMunicipio } from './_componentes/cartao-municipio';
+import { ModalGerenciar } from './_componentes/modal-gerenciar';
+import { ModalNovoMunicipio } from './_componentes/modal-novo-municipio';
+import { Indicador } from './_componentes/ui';
 
-export default function PaginaMunicipios() {
-  const [clientes, setClientes] = useState<ClienteMunicipio[]>([]);
+export default function PainelSuperadmin() {
+  const [municipios, setMunicipios] = useState<ClienteMunicipio[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
-  const [criando, setCriando] = useState(false);
-  const [formulario, setFormulario] = useState({ nomeMunicipio: '', slug: '', uf: '' });
+  const [erro, setErro] = useState('');
+  const [aviso, setAviso] = useState('');
+  const [mostrarNovo, setMostrarNovo] = useState(false);
+  const [gerenciando, setGerenciando] = useState<{ municipio: ClienteMunicipio; aba: string } | null>(null);
 
-  async function carregar() {
+  const carregar = useCallback(async () => {
     setCarregando(true);
-    setErro(null);
+    setErro('');
     try {
-      setClientes(await chamarSuperadmin<ClienteMunicipio[]>('/clientes'));
+      setMunicipios(await chamarSuperadmin<ClienteMunicipio[]>('/clientes'));
     } catch (e) {
       setErro((e as Error).message);
     } finally {
       setCarregando(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     carregar();
-  }, []);
+  }, [carregar]);
 
-  // O identificador vira parte da URL do cliente (/iraucuba) e o nome do schema, então é
-  // sugerido a partir do nome sem acento nem espaço — mas continua editável.
-  function sugerirSlug(nome: string) {
-    return nome
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
-
-  async function criar(evento: FormEvent) {
-    evento.preventDefault();
-    setCriando(true);
-    setErro(null);
-    setAviso(null);
+  async function alternarAtivo(municipio: ClienteMunicipio) {
+    setErro('');
     try {
-      const r = await chamarSuperadmin<{ slug: string; migracoesAplicadas: number }>('/clientes', {
-        method: 'POST',
-        body: JSON.stringify(formulario),
-      });
-      setAviso(`Município "${r.slug}" criado — ${r.migracoesAplicadas} migration(s) aplicada(s) no schema novo.`);
-      setFormulario({ nomeMunicipio: '', slug: '', uf: '' });
-      await carregar();
-    } catch (e) {
-      setErro((e as Error).message);
-    } finally {
-      setCriando(false);
-    }
-  }
-
-  async function alternarAtivo(cliente: ClienteMunicipio) {
-    setErro(null);
-    try {
-      await chamarSuperadmin(`/clientes/${cliente.slug}/ativo`, {
+      await chamarSuperadmin(`/clientes/${municipio.slug}/ativo`, {
         method: 'PATCH',
-        body: JSON.stringify({ ativo: !cliente.ativo }),
+        body: JSON.stringify({ ativo: !municipio.ativo }),
       });
       await carregar();
     } catch (e) {
@@ -86,9 +45,9 @@ export default function PaginaMunicipios() {
     }
   }
 
-  async function migrarTodos() {
-    setErro(null);
-    setAviso(null);
+  async function atualizarEstruturaDeTodos() {
+    setErro('');
+    setAviso('');
     try {
       const r = await chamarSuperadmin<{ slug: string; aplicadas: number }[]>('/clientes/migrar', { method: 'POST' });
       const total = r.reduce((soma, item) => soma + item.aplicadas, 0);
@@ -99,117 +58,90 @@ export default function PaginaMunicipios() {
     }
   }
 
+  const ativos = municipios.filter((m) => m.ativo).length;
+  const totalConvenios = municipios.reduce((s, m) => s + m.convenios, 0);
+
   return (
-    <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Municípios</h1>
-        <button type="button" onClick={migrarTodos} className={BOTAO_SECUNDARIO}>
-          Atualizar estrutura de todos
-        </button>
+    <>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Indicador rotulo="Municípios" valor={municipios.length} cor="blue" Icone={Building} />
+        <Indicador rotulo="Ativos" valor={ativos} cor="green" Icone={CheckCircle} />
+        <Indicador rotulo="Inativos" valor={municipios.length - ativos} cor="red" Icone={XCircle} />
+        <Indicador rotulo="Convênios" valor={totalConvenios} cor="purple" Icone={Archive} />
       </div>
 
-      {erro && <p className={AVISO_ERRO}>{erro}</p>}
-      {aviso && <p className={AVISO_SUCESSO}>{aviso}</p>}
+      {erro && <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
+      {aviso && <p className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{aviso}</p>}
 
-      <form onSubmit={criar} className={`${CARTAO} mb-5`}>
-        <h2 className="mb-4 text-sm font-semibold">Novo município</h2>
-        <div className="grid gap-4 sm:grid-cols-[2fr,1.5fr,auto,auto]">
-          <label>
-            <span className={ROTULO}>Município</span>
-            <input
-              required
-              value={formulario.nomeMunicipio}
-              onChange={(e) =>
-                setFormulario((f) => ({
-                  ...f,
-                  nomeMunicipio: e.target.value,
-                  slug: f.slug || sugerirSlug(e.target.value),
-                }))
-              }
-              className={CAMPO}
-            />
-          </label>
-          <label>
-            <span className={ROTULO}>Identificador (URL)</span>
-            <input
-              required
-              value={formulario.slug}
-              onChange={(e) => setFormulario((f) => ({ ...f, slug: sugerirSlug(e.target.value) }))}
-              className={`${CAMPO} font-mono text-xs`}
-            />
-          </label>
-          <label>
-            <span className={ROTULO}>UF</span>
-            <input
-              required
-              maxLength={2}
-              value={formulario.uf}
-              onChange={(e) => setFormulario((f) => ({ ...f, uf: e.target.value.toUpperCase() }))}
-              className={`${CAMPO} w-16 uppercase`}
-            />
-          </label>
-          <button type="submit" disabled={criando} className={`${BOTAO_PRIMARIO} self-end`}>
-            {criando ? 'Criando…' : 'Criar município'}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-gray-800">Municípios Cadastrados</h2>
+          <p className="mt-0.5 text-xs text-gray-500">
+            {municipios.length} município{municipios.length !== 1 ? 's' : ''} cadastrado
+            {municipios.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={atualizarEstruturaDeTodos}
+            className="flex items-center gap-1.5 rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            title="Aplica em todos os municípios a estrutura que ainda faltar"
+          >
+            <RefreshCw className="h-4 w-4" /> Atualizar estrutura
+          </button>
+          <button
+            type="button"
+            onClick={() => setMostrarNovo(true)}
+            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" /> Novo Município
           </button>
         </div>
-      </form>
+      </div>
 
       {carregando ? (
-        <p className="text-sm text-neutral-500">Carregando…</p>
+        <div className="py-12 text-center text-gray-400">
+          <RefreshCw className="mx-auto mb-3 h-8 w-8 animate-spin" />
+          Carregando...
+        </div>
+      ) : municipios.length === 0 ? (
+        <div className="rounded-2xl border-2 border-dashed border-gray-200 py-16 text-center">
+          <Building className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+          <p className="font-medium text-gray-500">Nenhum município cadastrado</p>
+          <p className="mt-1 text-sm text-gray-400">Crie o primeiro para começar a locar o sistema.</p>
+        </div>
       ) : (
-        <div className={CARTAO_LISTA}>
-          <table className="w-full text-left text-sm">
-            <thead className={CABECALHO_TABELA}>
-              <tr>
-                <th className="px-4 py-3 font-medium">Município</th>
-                <th className="px-4 py-3 font-medium">URL</th>
-                <th className="px-4 py-3 font-medium">Schema</th>
-                <th className="px-4 py-3 text-right font-medium">Usuários</th>
-                <th className="px-4 py-3 text-right font-medium">Convênios</th>
-                <th className="px-4 py-3 font-medium">Situação</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {clientes.map((cliente) => (
-                <tr key={cliente.id} className={LINHA_TABELA}>
-                  <td className="px-4 py-3 font-medium">
-                    {cliente.nomeMunicipio}/{cliente.uf}
-                  </td>
-                  <td className="px-4 py-3">
-                    <a href={`/${cliente.slug}`} className="font-mono text-xs text-neutral-600 hover:underline dark:text-neutral-300">
-                      /{cliente.slug}
-                    </a>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-500">{cliente.schemaNome}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{cliente.usuarios}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{cliente.convenios}</td>
-                  <td className="px-4 py-3">
-                    <span className={etiqueta(cliente.ativo)}>{cliente.ativo ? 'Ativo' : 'Inativo'}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button type="button" onClick={() => alternarAtivo(cliente)} className={ACAO_TABELA}>
-                      {cliente.ativo ? 'Desativar' : 'Reativar'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {clientes.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
-                    Nenhum município cadastrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {municipios.map((municipio) => (
+            <CartaoMunicipio
+              key={municipio.id}
+              municipio={municipio}
+              aoGerenciar={(aba) => setGerenciando({ municipio, aba: aba ?? 'info' })}
+              aoAlternarAtivo={() => alternarAtivo(municipio)}
+            />
+          ))}
         </div>
       )}
 
-      <p className={RODAPE_EXPLICATIVO}>
-        Desativar um município bloqueia o acesso imediatamente, sem apagar nada: os dados continuam
-        no schema e voltam a aparecer ao reativar.
-      </p>
-    </div>
+      {mostrarNovo && (
+        <ModalNovoMunicipio
+          aoFechar={() => setMostrarNovo(false)}
+          aoCriar={(mensagem) => {
+            setAviso(mensagem);
+            carregar();
+          }}
+        />
+      )}
+
+      {gerenciando && (
+        <ModalGerenciar
+          municipio={gerenciando.municipio}
+          abaInicial={gerenciando.aba}
+          aoFechar={() => setGerenciando(null)}
+          aoAtualizar={carregar}
+        />
+      )}
+    </>
   );
 }
