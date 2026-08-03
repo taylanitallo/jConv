@@ -1,13 +1,9 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { Building, Plus, RefreshCw, XCircle } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
+import { Plus, RefreshCw, X } from 'lucide-react';
 import { chamarSuperadmin } from '@/lib/api/superadmin';
-import { UFS, gerarSlug } from './ui';
-
-const CAMPO =
-  'w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500';
-const ROTULO = 'mb-1 block text-xs font-medium text-gray-600';
+import { BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CAMPO, ROTULO, UFS, gerarSlug } from './ui';
 
 export function ModalNovoMunicipio({
   aoFechar,
@@ -20,6 +16,16 @@ export function ModalNovoMunicipio({
   const [slugManual, setSlugManual] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+
+  // Trava a rolagem do que está atrás enquanto o modal existe — mesmo comportamento dos modais
+  // do sistema do município.
+  useEffect(() => {
+    const anterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = anterior;
+    };
+  }, []);
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
@@ -40,98 +46,89 @@ export function ModalNovoMunicipio({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 dark:border-neutral-800 dark:bg-neutral-950">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Novo Município</h2>
-            <p className="mt-0.5 text-sm text-gray-500">Cria um schema PostgreSQL isolado</p>
+            <h2 className="font-semibold">Novo município</h2>
+            <p className="mt-0.5 text-sm text-neutral-500">Cria um schema isolado no banco</p>
           </div>
           <button
             type="button"
             onClick={aoFechar}
-            className="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900"
           >
-            <XCircle className="h-5 w-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={enviar} className="space-y-5 p-6">
-          {erro && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
+          {erro && (
+            <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+              {erro}
+            </p>
+          )}
 
-          <div>
-            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
-              <Building className="h-4 w-4" /> Dados do Município
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className={ROTULO}>Nome do Município *</label>
-                <input
-                  value={form.nomeMunicipio}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      nomeMunicipio: e.target.value,
-                      slug: slugManual ? f.slug : gerarSlug(e.target.value),
-                    }))
-                  }
-                  className={CAMPO}
-                  placeholder="Ex: Irauçuba"
-                  required
-                />
-              </div>
-              <div>
-                <label className={ROTULO}>Identificador (URL) *</label>
-                <input
-                  value={form.slug}
-                  onChange={(e) => {
-                    setSlugManual(true);
-                    setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }));
-                  }}
-                  className={`${CAMPO} font-mono`}
-                  placeholder="iraucuba"
-                  required
-                />
-                <p className="mt-1 text-xs text-gray-400">Vira o endereço (/iraucuba) e o nome do schema</p>
-              </div>
-              <div>
-                <label className={ROTULO}>Estado (UF) *</label>
-                <select
-                  value={form.uf}
-                  onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))}
-                  className={CAMPO}
-                  required
-                >
-                  {UFS.map((uf) => (
-                    <option key={uf} value={uf}>
-                      {uf}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="col-span-2 block">
+              <span className={ROTULO}>Nome do município</span>
+              <input
+                value={form.nomeMunicipio}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    nomeMunicipio: e.target.value,
+                    slug: slugManual ? f.slug : gerarSlug(e.target.value),
+                  }))
+                }
+                className={CAMPO}
+                placeholder="Ex: Irauçuba"
+                required
+              />
+            </label>
+            <label className="block">
+              <span className={ROTULO}>Identificador (URL)</span>
+              <input
+                value={form.slug}
+                onChange={(e) => {
+                  setSlugManual(true);
+                  setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }));
+                }}
+                className={`${CAMPO} font-mono`}
+                placeholder="iraucuba"
+                required
+              />
+              <p className="mt-1 text-xs text-neutral-500">Vira o endereço (/iraucuba) e o nome do schema</p>
+            </label>
+            <label className="block">
+              <span className={ROTULO}>UF</span>
+              <select
+                value={form.uf}
+                onChange={(e) => setForm((f) => ({ ...f, uf: e.target.value }))}
+                className={CAMPO}
+                required
+              >
+                {UFS.map((uf) => (
+                  <option key={uf} value={uf}>
+                    {uf}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
-          <p className="rounded-xl bg-blue-50 p-3 text-xs text-blue-800">
-            O schema nasce com a estrutura completa do sistema e vazio de dados. O primeiro
-            administrador da prefeitura é cadastrado depois, na aba Usuários.
+          <p className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+            O schema nasce com a estrutura completa do sistema e vazio de dados. O primeiro administrador da
+            prefeitura é cadastrado depois, na aba Usuários.
           </p>
 
-          <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
-            <button
-              type="button"
-              onClick={aoFechar}
-              className="rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-            >
+          <div className="flex justify-end gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+            <button type="button" onClick={aoFechar} className={BOTAO_SECUNDARIO}>
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={salvando}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-            >
+            <button type="submit" disabled={salvando} className={`${BOTAO_PRIMARIO} flex items-center gap-2`}>
               {salvando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              {salvando ? 'Criando...' : 'Criar Município'}
+              {salvando ? 'Criando…' : 'Criar município'}
             </button>
           </div>
         </form>

@@ -18,7 +18,18 @@ import {
   type ClienteMunicipio,
   type UsuarioDoMunicipio,
 } from '@/lib/api/superadmin';
-import { Etiqueta, formatarData } from './ui';
+import {
+  ACAO_LINK,
+  BOTAO_PERIGO,
+  BOTAO_PRIMARIO,
+  BOTAO_SECUNDARIO,
+  CABECALHO_TABELA,
+  CAMPO,
+  CARTAO,
+  Etiqueta,
+  LINHA_TABELA,
+  formatarData,
+} from './ui';
 
 const ABAS = [
   { id: 'info', rotulo: 'Informações', Icone: Building },
@@ -44,40 +55,40 @@ export function ModalGerenciar({
   const [aba, setAba] = useState<Aba>((abaInicial as Aba) ?? 'info');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl bg-white shadow-2xl">
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 dark:border-neutral-800 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700">
-              <Building className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-100 dark:bg-neutral-800">
+              <Building className="h-5 w-5 text-neutral-600 dark:text-neutral-300" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">{municipio.nomeMunicipio}</h2>
-              <p className="font-mono text-xs text-gray-500">
+              <h2 className="font-bold text-neutral-900 dark:text-neutral-100">{municipio.nomeMunicipio}</h2>
+              <p className="font-mono text-xs text-neutral-500">
                 /{municipio.slug} · {municipio.schemaNome}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Etiqueta cor={municipio.ativo ? 'green' : 'gray'}>{municipio.ativo ? 'Ativo' : 'Inativo'}</Etiqueta>
+            <Etiqueta cor={municipio.ativo ? 'ativo' : 'neutra'}>{municipio.ativo ? 'Ativo' : 'Inativo'}</Etiqueta>
             <button
               type="button"
               onClick={aoFechar}
-              className="rounded-xl p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-900"
             >
               <XCircle className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <div className="flex shrink-0 overflow-x-auto border-b border-gray-200 px-4">
+        <div className="flex shrink-0 overflow-x-auto border-b border-neutral-200 dark:border-neutral-800 px-4">
           {ABAS.map(({ id, rotulo, Icone }) => (
             <button
               key={id}
               type="button"
               onClick={() => setAba(id)}
               className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-                aba === id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                aba === id ? 'border-neutral-900 text-neutral-900 dark:border-neutral-100 dark:text-neutral-100' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
               }`}
             >
               <Icone className="h-4 w-4" /> {rotulo}
@@ -114,9 +125,9 @@ function AbaInformacoes({ municipio }: { municipio: ClienteMunicipio }) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {campos.map(([rotulo, valor]) => (
-        <div key={rotulo} className="rounded-xl bg-gray-50 p-4">
-          <p className="mb-1 text-xs text-gray-500">{rotulo}</p>
-          <p className="break-all text-sm font-medium text-gray-900">{valor}</p>
+        <div key={rotulo} className="rounded-md bg-neutral-50 dark:bg-neutral-900 p-4">
+          <p className="mb-1 text-xs text-neutral-500">{rotulo}</p>
+          <p className="break-all text-sm font-medium text-neutral-900 dark:text-neutral-100">{valor}</p>
         </div>
       ))}
     </div>
@@ -163,9 +174,9 @@ function AbaUsuarios({ municipio }: { municipio: ClienteMunicipio }) {
   return (
     <div className="space-y-4">
       {erro && <Erro texto={erro} />}
-      <div className="overflow-hidden rounded-xl border border-gray-200">
+      <div className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
         <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400">
             <tr>
               <th className="px-4 py-3 font-medium">Nome</th>
               <th className="px-4 py-3 font-medium">E-mail</th>
@@ -176,15 +187,15 @@ function AbaUsuarios({ municipio }: { municipio: ClienteMunicipio }) {
           </thead>
           <tbody>
             {usuarios.map((u) => (
-              <tr key={u.id} className="border-t border-gray-200">
-                <td className="px-4 py-3 font-medium text-gray-900">{u.nome}</td>
-                <td className="px-4 py-3 text-gray-500">{u.email}</td>
+              <tr key={u.id} className="border-t border-neutral-200 dark:border-neutral-800">
+                <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">{u.nome}</td>
+                <td className="px-4 py-3 text-neutral-500">{u.email}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{u.modulos}</td>
                 <td className="px-4 py-3">
-                  <Etiqueta cor={u.ativo ? 'green' : 'gray'}>{u.ativo ? 'Ativo' : 'Inativo'}</Etiqueta>
+                  <Etiqueta cor={u.ativo ? 'ativo' : 'neutra'}>{u.ativo ? 'Ativo' : 'Inativo'}</Etiqueta>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button type="button" onClick={() => alternar(u)} className="text-xs font-medium text-blue-600 hover:underline">
+                  <button type="button" onClick={() => alternar(u)} className="text-xs font-medium text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-100">
                     {u.ativo ? 'Desativar' : 'Reativar'}
                   </button>
                 </td>
@@ -192,7 +203,7 @@ function AbaUsuarios({ municipio }: { municipio: ClienteMunicipio }) {
             ))}
             {usuarios.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-neutral-400">
                   Nenhum usuário neste município.
                 </td>
               </tr>
@@ -200,7 +211,7 @@ function AbaUsuarios({ municipio }: { municipio: ClienteMunicipio }) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-neutral-500">
         Cadastro de novos usuários e ajuste de permissões ficam dentro do município, em Configurações ›
         Usuários — quem administra a prefeitura é quem conhece os cargos.
       </p>
@@ -250,7 +261,7 @@ function AbaAcessos({ municipio }: { municipio: ClienteMunicipio }) {
         <select
           value={dias}
           onChange={(e) => setDias(Number(e.target.value))}
-          className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm"
         >
           <option value={7}>Últimos 7 dias</option>
           <option value={30}>Últimos 30 dias</option>
@@ -261,7 +272,7 @@ function AbaAcessos({ municipio }: { municipio: ClienteMunicipio }) {
           type="button"
           onClick={exportarCsv}
           disabled={!acessos.length}
-          className="flex items-center gap-1.5 rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 disabled:opacity-50 dark:hover:bg-neutral-900"
         >
           <FileText className="h-4 w-4" /> Exportar CSV
         </button>
@@ -270,9 +281,9 @@ function AbaAcessos({ municipio }: { municipio: ClienteMunicipio }) {
       {carregando ? (
         <Carregando />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200">
+        <div className="overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400">
               <tr>
                 <th className="px-4 py-3 font-medium">Data</th>
                 <th className="px-4 py-3 font-medium">E-mail</th>
@@ -282,18 +293,18 @@ function AbaAcessos({ municipio }: { municipio: ClienteMunicipio }) {
             </thead>
             <tbody>
               {acessos.map((a) => (
-                <tr key={a.id} className="border-t border-gray-200">
+                <tr key={a.id} className="border-t border-neutral-200 dark:border-neutral-800">
                   <td className="whitespace-nowrap px-4 py-3 tabular-nums">{formatarData(a.criado_em)}</td>
                   <td className="px-4 py-3">{a.email}</td>
                   <td className="px-4 py-3">
-                    <Etiqueta cor={a.sucesso ? 'green' : 'red'}>{a.sucesso ? 'Entrou' : a.motivo ?? 'Falhou'}</Etiqueta>
+                    <Etiqueta cor={a.sucesso ? 'ativo' : 'erro'}>{a.sucesso ? 'Entrou' : a.motivo ?? 'Falhou'}</Etiqueta>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{a.ip ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-neutral-500">{a.ip ?? '—'}</td>
                 </tr>
               ))}
               {acessos.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-neutral-400">
                     Nenhum acesso no período.
                   </td>
                 </tr>
@@ -339,11 +350,11 @@ function AbaBackup({ municipio }: { municipio: ClienteMunicipio }) {
       {erro && <Erro texto={erro} />}
       {aviso && <p className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">{aviso}</p>}
 
-      <div className="rounded-xl border border-gray-200 p-5">
-        <h3 className="flex items-center gap-2 font-semibold text-gray-800">
+      <div className="rounded-md border border-neutral-200 dark:border-neutral-800 p-5">
+        <h3 className="flex items-center gap-2 font-semibold text-neutral-800 dark:text-neutral-200">
           <HardDrive className="h-4 w-4" /> Gerar backup
         </h3>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-neutral-500">
           Baixa todos os dados de {municipio.nomeMunicipio}/{municipio.uf} em um arquivo JSON. A estrutura das tabelas
           não vai junto — ela é reconstruída pelas migrations, então o arquivo continua válido mesmo depois de o
           sistema mudar.
@@ -352,7 +363,7 @@ function AbaBackup({ municipio }: { municipio: ClienteMunicipio }) {
           type="button"
           onClick={baixar}
           disabled={gerando}
-          className="mt-4 flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="mt-4 flex items-center gap-2 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white disabled:opacity-50"
         >
           {gerando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           {gerando ? 'Gerando...' : 'Baixar backup'}
@@ -417,11 +428,11 @@ function AbaRestore({ municipio, aoRestaurar }: { municipio: ClienteMunicipio; a
       {erro && <Erro texto={erro} />}
       {aviso && <p className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">{aviso}</p>}
 
-      <div className="rounded-xl border-2 border-red-200 p-5">
+      <div className="rounded-md border-2 border-red-200 p-5">
         <h3 className="flex items-center gap-2 font-semibold text-red-700">
           <RotateCcw className="h-4 w-4" /> Restaurar backup
         </h3>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-neutral-500">
           <strong>Substitui</strong> todos os dados de {municipio.nomeMunicipio} pelos do arquivo. Roda em uma
           transação só: ou fica exatamente como no backup, ou nada muda.
         </p>
@@ -430,23 +441,23 @@ function AbaRestore({ municipio, aoRestaurar }: { municipio: ClienteMunicipio; a
           type="file"
           accept="application/json"
           onChange={selecionar}
-          className="mt-4 block w-full text-sm file:mr-3 file:rounded-xl file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-medium"
+          className="mt-4 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 dark:bg-neutral-800 file:px-3 file:py-2 file:text-sm file:font-medium"
         />
 
         {arquivo && (
           <>
-            <div className="mt-4 rounded-xl bg-gray-50 p-3 text-xs">
-              <p className="font-medium text-gray-900">{arquivo.nome}</p>
-              <p className="mt-1 text-gray-500">{totalArquivo} registro(s) no arquivo</p>
+            <div className="mt-4 rounded-md bg-neutral-50 dark:bg-neutral-900 p-3 text-xs">
+              <p className="font-medium text-neutral-900 dark:text-neutral-100">{arquivo.nome}</p>
+              <p className="mt-1 text-neutral-500">{totalArquivo} registro(s) no arquivo</p>
             </div>
 
-            <p className="mt-4 text-sm text-gray-700">
+            <p className="mt-4 text-sm text-neutral-700 dark:text-neutral-300">
               Para confirmar, digite <strong className="font-mono">{municipio.slug}</strong>:
             </p>
             <input
               value={confirmacao}
               onChange={(e) => setConfirmacao(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2 font-mono text-sm"
+              className="mt-2 w-full rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-2 font-mono text-sm"
               placeholder={municipio.slug}
             />
 
@@ -454,7 +465,7 @@ function AbaRestore({ municipio, aoRestaurar }: { municipio: ClienteMunicipio; a
               type="button"
               onClick={restaurar}
               disabled={confirmacao !== municipio.slug || restaurando}
-              className="mt-3 flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              className="mt-3 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
             >
               {restaurando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
               {restaurando ? 'Restaurando...' : 'Restaurar'}
@@ -470,7 +481,7 @@ function AbaRestore({ municipio, aoRestaurar }: { municipio: ClienteMunicipio; a
 
 function Carregando() {
   return (
-    <div className="py-12 text-center text-gray-400">
+    <div className="py-12 text-center text-neutral-400">
       <RefreshCw className="mx-auto mb-3 h-8 w-8 animate-spin" />
       Carregando...
     </div>
