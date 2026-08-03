@@ -14,11 +14,13 @@ export async function chamarSuperadmin<T>(caminho: string, opcoes: RequestInit =
 
   const corpo = await resposta.json().catch(() => undefined);
   if (!resposta.ok) {
-    // Não existe tela de login própria daqui: o cookie de sessão é o mesmo do sistema, então a
-    // saída é entrar por um município e voltar. Sem esta mensagem, a tela mostraria só
-    // "Não autenticado" e não diria o que fazer.
-    if (resposta.status === 401) {
-      throw new ErroApi('Entre no sistema por um município e volte a esta página.', 401, corpo);
+    // Sessão ausente ou expirada leva à entrada da própria administração — nunca à de um
+    // município, que é outra coisa. O /login é a exceção: lá o 401 é a resposta legítima a uma
+    // credencial errada, e redirecionar para a página onde já se está apagaria o erro da tela.
+    if (resposta.status === 401 && caminho !== '/login' && typeof window !== 'undefined') {
+      window.location.replace('/superadmin/login');
+      // Interrompe a cadeia: a navegação já está a caminho e a tela não deve renderizar erro.
+      await new Promise(() => undefined);
     }
     throw new ErroApi(corpo?.message ?? 'Erro ao comunicar com o servidor', resposta.status, corpo);
   }

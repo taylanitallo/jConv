@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { chamarSuperadmin } from '@/lib/api/superadmin';
 
 const ABAS = [
   { rotulo: 'Municípios', href: '/superadmin' },
@@ -10,10 +11,23 @@ const ABAS = [
   { rotulo: 'Backup', href: '/superadmin/backup' },
 ];
 
-// Área do dono do sistema, fora de qualquer município: não tem barra lateral de prefeitura nem
-// contexto de permissões — quem entra aqui é validado pelo SuperadminGuard na API.
+// Área do dono do sistema, independente de qualquer município: tem login próprio, não tem barra
+// lateral de prefeitura e não usa o contexto de permissões. Quem entra é validado pelo
+// SuperadminGuard na API, a cada requisição.
 export default function LayoutSuperadmin({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();
+  const roteador = useRouter();
+
+  // A tela de login é a única sem sessão — nela o cabeçalho e as abas não fazem sentido.
+  if (caminho === '/superadmin/login') {
+    return <>{children}</>;
+  }
+
+  async function sair() {
+    await chamarSuperadmin('/logout', { method: 'POST' }).catch(() => undefined);
+    roteador.replace('/superadmin/login');
+    roteador.refresh();
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -24,9 +38,9 @@ export default function LayoutSuperadmin({ children }: { children: React.ReactNo
             Administração do sistema
           </span>
         </div>
-        <Link href="/" className="text-sm text-neutral-300 hover:text-white">
-          Sair da administração
-        </Link>
+        <button type="button" onClick={sair} className="text-sm text-neutral-300 hover:text-white">
+          Sair
+        </button>
       </header>
 
       <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-6">
