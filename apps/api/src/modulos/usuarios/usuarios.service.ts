@@ -18,7 +18,10 @@ export class UsuariosService {
   }
 
   // Cria o usuário no Supabase Auth via convite por e-mail (nunca geramos/vemos senha aqui —
-  // o próprio usuário define pelo link recebido) e já grava o perfil em public.usuarios.
+  // o próprio usuário define pelo link recebido) e já grava o perfil no schema do município.
+  //
+  // A conta do Supabase Auth é global, mas o perfil não: o mesmo e-mail pode existir em mais de
+  // uma prefeitura, e é o cadastro no schema que define onde ele entra.
   async criar(cliente: ClienteDados, dados: CriarUsuario) {
     const { data: convite, error: erroConvite } = await this.supabaseAdmin.auth.admin.inviteUserByEmail(dados.email);
     if (erroConvite) throw erroConvite;

@@ -6,11 +6,7 @@ import { DocumentosAnexosService } from './documentos-anexos.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { PermissoesGuard } from '../../guardas/permissoes.guard';
 import { Permissao } from '../../comum/decoradores/permissao.decorator';
-import {
-  ArmazenamentoSupabase,
-  ClienteSupabase,
-  MunicipioAtual,
-} from '../../comum/decoradores/cliente-supabase.decorator';
+import { ClienteSupabase, MunicipioAtual } from '../../comum/decoradores/cliente-supabase.decorator';
 import { ClienteMunicipio } from '../../banco/banco.service';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
@@ -34,14 +30,13 @@ export class DocumentosAnexosController {
   @Post('upload-assinado')
   @Permissao('Convenios', 'Total')
   async criarUploadAssinado(
-    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
     @MunicipioAtual() municipio: ClienteMunicipio,
     @Body('nomeArquivo') nomeArquivo: unknown,
   ) {
     if (typeof nomeArquivo !== 'string' || !nomeArquivo.trim()) {
       throw new BadRequestException('Informe o nome do arquivo');
     }
-    return this.service.criarUploadAssinado(armazenamento, municipio.slug, nomeArquivo);
+    return this.service.criarUploadAssinado(municipio.slug, nomeArquivo);
   }
 
   @Post()
@@ -54,20 +49,18 @@ export class DocumentosAnexosController {
   @Get(':id/download')
   async obterUrlDownload(
     @ClienteSupabase() cliente: ClienteDados,
-    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
     @Param('id') id: string,
   ) {
-    return this.service.obterUrlDownload(cliente, armazenamento, id);
+    return this.service.obterUrlDownload(cliente, id);
   }
 
   @Delete(':id')
   @Permissao('Convenios', 'Total')
   async excluir(
     @ClienteSupabase() cliente: ClienteDados,
-    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
     @Param('id') id: string,
   ) {
-    await this.service.excluir(cliente, armazenamento, id);
+    await this.service.excluir(cliente, id);
     return { sucesso: true };
   }
 }

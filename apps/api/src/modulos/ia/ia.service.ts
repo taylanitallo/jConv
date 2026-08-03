@@ -1,6 +1,7 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Inject, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { SUPABASE_ADMIN_CLIENT } from '../../configuracao/supabase.provider';
 import { ClienteDados } from '../../banco/cliente-dados';
 import {
   ROTULOS_ESFERA_CONVENIO,
@@ -31,6 +32,9 @@ contexto.`;
 export class IaService {
   constructor(
     private readonly configuracao: ConfiguracaoService,
+    // Storage pelo cliente admin: o bucket e compartilhado entre municipios e a RLS dele nao
+    // consegue distinguir de qual prefeitura e a requisicao (ver DocumentosAnexosService).
+    @Inject(SUPABASE_ADMIN_CLIENT) private readonly armazenamento: SupabaseClient,
     private readonly dashboardService: DashboardService,
     private readonly configuracoesSistema: ConfiguracoesService,
   ) {}
@@ -162,7 +166,6 @@ export class IaService {
 
   async extrairDocumento(
     cliente: ClienteDados,
-    armazenamento: SupabaseClient,
     documentoId: string,
   ): Promise<Record<string, unknown>> {
     const anthropic = this.obterCliente();
@@ -170,7 +173,7 @@ export class IaService {
       await cliente.from('documentos_anexos').select('*').eq('id', documentoId).single(),
     ) as Record<string, any>;
 
-    const { data: arquivo, error } = await armazenamento.storage
+    const { data: arquivo, error } = await this.armazenamento.storage
       .from('documentos-anexos')
       .download(documento.arquivo_caminho);
     if (error || !arquivo) {

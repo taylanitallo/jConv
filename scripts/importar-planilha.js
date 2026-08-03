@@ -14,14 +14,18 @@
 // - Nada é apagado/perdido: todo texto de origem que não vira campo estruturado é preservado
 //   em `observacoes`, prefixado com o nome da coluna de origem.
 //
-// Uso: node scripts/importar-planilha.js "D:/Planilha Convênios 2026.xlsx" [--commit]
+// Uso: node scripts/importar-planilha.js <slug-do-municipio> "D:/Planilha Convênios 2026.xlsx" [--commit]
+//
+// O slug diz em qual schema os dados entram: não existe mais um banco único do sistema, e
+// importar no município errado seria difícil de perceber depois.
 // Sem --commit roda em modo dry-run (só imprime o relatório, não grava nada no banco).
 
 require('dotenv').config();
 const XLSX = require('xlsx');
 const { Client } = require('pg');
 
-const CAMINHO_PLANILHA = process.argv[2] || 'D:/Planilha Convênios 2026.xlsx';
+const SLUG_MUNICIPIO = process.argv[2];
+const CAMINHO_PLANILHA = process.argv[3] || 'D:/Planilha Convênios 2026.xlsx';
 const MODO_COMMIT = process.argv.includes('--commit');
 
 // ---------------------------------------------------------------------------
@@ -492,20 +496,38 @@ async function main() {
     return;
   }
 
+  if (!SLUG_MUNICIPIO || SLUG_MUNICIPIO.startsWith('--')) {
+    console.error('Informe o município: node scripts/importar-planilha.js <slug> "<planilha.xlsx>" [--commit]');
+    process.exit(1);
+  }
+
   const client = new Client({ connectionString: process.env.SUPABASE_DB_URL, ssl: { rejectUnauthorized: false } });
   await client.connect();
+
+  const { rows: municipios } = await client.query(
+    'SELECT schema_nome, nome_municipio FROM public.clientes WHERE slug = $1',
+    [SLUG_MUNICIPIO],
+  );
+  if (!municipios.length) {
+    console.error(`Município "${SLUG_MUNICIPIO}" não encontrado. Veja: node scripts/clientes.js listar`);
+    await client.end();
+    process.exit(1);
+  }
+  // Daqui em diante nenhuma tabela é qualificada: quem decide o destino é o search_path.
+  await client.query(`SET search_path = "${municipios[0].schema_nome}", extensions`);
+  console.log(`Importando para ${municipios[0].nome_municipio} (${municipios[0].schema_nome})`);
 
   const orgaoIdPorNome = new Map();
   async function obterOrgaoId(nome, esfera) {
     const chave = nome.toLowerCase();
     if (orgaoIdPorNome.has(chave)) return orgaoIdPorNome.get(chave);
-    const existente = await client.query('SELECT id FROM public.orgaos_concedentes WHERE LOWER(nome) = LOWER($1)', [nome]);
+    const existente = await client.query('SELECT id FROM orgaos_concedentes WHERE LOWER(nome) = LOWER($1)', [nome]);
     let id;
     if (existente.rows.length > 0) {
       id = existente.rows[0].id;
     } else {
       const inserido = await client.query(
-        'INSERT INTO public.orgaos_concedentes (nome, esfera) VALUES ($1, $2) RETURNING id',
+        'INSERT INTO orgaos_concedentes (nome, esfera) VALUES ($1, $2) RETURNING id',
         [nome, esfera],
       );
       id = inserido.rows[0].id;
@@ -519,12 +541,12 @@ async function main() {
     if (!nome) return null;
     const chave = nome.toLowerCase();
     if (empresaIdPorNome.has(chave)) return empresaIdPorNome.get(chave);
-    const existente = await client.query('SELECT id FROM public.empresas_contratadas WHERE LOWER(nome) = LOWER($1)', [nome]);
+    const existente = await client.query('SELECT id FROM empresas_contratadas WHERE LOWER(nome) = LOWER($1)', [nome]);
     let id;
     if (existente.rows.length > 0) {
       id = existente.rows[0].id;
     } else {
-      const inserido = await client.query('INSERT INTO public.empresas_contratadas (nome) VALUES ($1) RETURNING id', [nome]);
+      const inserido = await client.query('INSERT INTO empresas_contratadas (nome) VALUES ($1) RETURNING id', [nome]);
       id = inserido.rows[0].id;
     }
     empresaIdPorNome.set(chave, id);
@@ -541,7 +563,7 @@ async function main() {
       const d = registro.dados;
       const empresaId = await obterEmpresaId(d.empresaNome);
       await client.query(
-        `INSERT INTO public.convenios (
+        `INSERT INTO convenios (
           orgao_concedente_id, tipo_instrumento, objeto, valor_conveniado, valor_concedido,
           valor_contrapartida, valor_licitado, numero_convenio, numero_mapp, numero_sic,
           numero_protocolo, numero_nup, numero_operacao_caixa, conta_bancaria, data_assinatura,
@@ -562,7 +584,7 @@ async function main() {
     } else if (registro.tipo === 'proposta') {
       const d = registro.dados;
       await client.query(
-        `INSERT INTO public.propostas (orgao_concedente_id, objeto, numero_protocolo, numero_nup, status, observacoes)
+        `INSERT INTO propostas (orgao_concedente_id, objeto, numero_protocolo, numero_nup, status, observacoes)
          VALUES ($1,$2,$3,$4,$5,$6)`,
         [orgaoId, d.objeto, d.numeroProtocolo, d.numeroNup, d.status, d.observacoes],
       );
@@ -570,7 +592,7 @@ async function main() {
     } else if (registro.tipo === 'cessao') {
       const d = registro.dados;
       await client.query(
-        `INSERT INTO public.cessoes_terreno (orgao_concedente_id, objeto, numero_protocolo, numero_nup, responsavel_interno, status, observacoes)
+        `INSERT INTO cessoes_terreno (orgao_concedente_id, objeto, numero_protocolo, numero_nup, responsavel_interno, status, observacoes)
          VALUES ($1,$2,$3,$4,$5,$6,$7)`,
         [orgaoId, d.objeto, d.numeroProtocolo, d.numeroNup, d.responsavelInterno, d.status, d.observacoes],
       );
@@ -578,7 +600,7 @@ async function main() {
     } else if (registro.tipo === 'limite_custeio') {
       const d = registro.dados;
       await client.query(
-        `INSERT INTO public.limites_custeio (orgao_concedente_id, tipo, portaria_referencia, competencia_ano, valor_teto, valor_utilizado, observacoes)
+        `INSERT INTO limites_custeio (orgao_concedente_id, tipo, portaria_referencia, competencia_ano, valor_teto, valor_utilizado, observacoes)
          VALUES ($1,$2,$3,$4,$5,$6,$7)`,
         [orgaoId, d.tipo, d.portariaReferencia, d.competenciaAno, d.valorTeto, d.valorUtilizado, d.observacoes],
       );

@@ -11,7 +11,11 @@
       "Bash(node -e \"console.log\\(Object.keys\\(require\\('./apps/api/package.json'\\).scripts\\).join\\(', '\\)\\)\")",
       "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/testar-superadmin.js\")",
       "Bash(node scripts/clientes.js remover zz-teste-cidade)",
-      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 3001,3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force }')"
+      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 3001,3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force }')",
+      "Bash(node scripts/executar-sql.js supabase/tests/cobertura-rls.test.sql)",
+      "Bash(node \"C:/Users/tayla/AppData/Local/Temp/claude/d--JEOS-Sistemas-Sistemas-jConv/d815661f-2fc8-4f96-a262-0828a2dca7b3/scratchpad/ajustar-importador.js\")",
+      "Bash(node --test scripts/importar-planilha.test.js)",
+      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force }')"
     ]
   }
 }

@@ -5,7 +5,7 @@ import { IaService } from './ia.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { PermissoesGuard } from '../../guardas/permissoes.guard';
 import { Permissao } from '../../comum/decoradores/permissao.decorator';
-import { ArmazenamentoSupabase, ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
+import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
 
 @Controller('ia')
 @UseGuards(AutenticacaoGuard, PermissoesGuard)
@@ -42,9 +42,8 @@ export class IaController {
   @Post('extrair-documento/:id')
   async extrairDocumento(
     @ClienteSupabase() cliente: ClienteDados,
-    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
     @Param('id') id: string,
   ) {
-    return this.service.extrairDocumento(cliente, armazenamento, id);
+    return this.service.extrairDocumento(cliente, id);
   }
 }
