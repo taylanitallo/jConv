@@ -1,10 +1,14 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { PostgrestError } from '@supabase/supabase-js';
 
-// Reaproveitado por todo service: transforma o {data, error} do supabase-js numa exceção
-// NestJS com um corpo de erro decente, em vez de deixar o objeto de erro do PostgREST
-// estourar cru como 500.
-export function desembrulhar<T>(resultado: { data: T | null; error: PostgrestError | null }): T {
+// Reaproveitado por todo service: transforma o {data, error} da camada de dados numa exceção
+// NestJS com um corpo de erro decente, em vez de deixar o objeto de erro estourar cru como 500.
+//
+// O tipo do erro é estrutural de propósito: serve tanto para o PostgrestError do supabase-js
+// (ainda usado no Storage) quanto para o ErroDados do adapter SQL.
+export function desembrulhar<T>(resultado: {
+  data: T | null;
+  error: { code?: string; message: string } | null;
+}): T {
   if (resultado.error) {
     if (resultado.error.code === 'PGRST116') {
       throw new NotFoundException('Registro não encontrado');

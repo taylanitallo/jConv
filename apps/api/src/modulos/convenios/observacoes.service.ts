@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { CriarObservacaoConvenio } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
@@ -7,7 +7,7 @@ import { desembrulhar } from '../../comum/supabase-erro';
 // também bloqueia por trigger (migration 0022), então não é só convenção de camada.
 @Injectable()
 export class ObservacoesService {
-  async listar(cliente: SupabaseClient, convenioId: string) {
+  async listar(cliente: ClienteDados, convenioId: string) {
     return desembrulhar(
       await cliente
         .from('observacoes_convenio')
@@ -17,7 +17,7 @@ export class ObservacoesService {
     );
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarObservacaoConvenio, autorNome: string) {
+  async criar(cliente: ClienteDados, dados: CriarObservacaoConvenio, autorNome: string) {
     return desembrulhar(
       await cliente
         .from('observacoes_convenio')

@@ -25,6 +25,12 @@ export class ConfiguracaoService {
     return this.obrigatoria('SUPABASE_SERVICE_ROLE_KEY');
   }
 
+  // Conexão direta ao Postgres, usada pela camada multi-tenant: o schema do município entra no
+  // search_path da conexão, coisa que o PostgREST (supabase-js) não permite fazer por requisição.
+  get urlBancoDados(): string {
+    return this.obrigatoria('SUPABASE_DB_URL');
+  }
+
   get urlFrontend(): string {
     return this.config.get<string>('URL_FRONTEND') ?? 'http://localhost:3000';
   }

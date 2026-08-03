@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaAtualizarConvenio, esquemaCriarConvenio } from '@jconv/compartilhado';
 import { ConveniosService } from './convenios.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -17,7 +17,7 @@ export class ConveniosController {
 
   @Get()
   async listar(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Query('esfera') esfera?: string,
     @Query('orgaoConcedenteId') orgaoConcedenteId?: string,
     @Query('statusGeral') statusGeral?: string,
@@ -29,27 +29,27 @@ export class ConveniosController {
   }
 
   @Get(':id')
-  async obter(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async obter(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     return paraCamelCase(await this.service.obter(cliente, id));
   }
 
   @Post()
   @Permissao('Convenios', 'Total')
-  async criar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
+  async criar(@ClienteSupabase() cliente: ClienteDados, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaCriarConvenio, corpo);
     return paraCamelCase(await this.service.criar(cliente, dados));
   }
 
   @Patch(':id')
   @Permissao('Convenios', 'Total')
-  async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
+  async atualizar(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarConvenio, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Delete(':id')
   @Permissao('Convenios', 'Total')
-  async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async excluir(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };
   }

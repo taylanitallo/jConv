@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaAtualizarConfiguracao } from '@jconv/compartilhado';
 import { ConfiguracoesService } from './configuracoes.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -17,7 +17,7 @@ export class ConfiguracoesController {
   // Leitura liberada a qualquer perfil: o nome do município e o layout dos relatórios são
   // usados em telas que todo mundo enxerga.
   @Get()
-  async obter(@ClienteSupabase() cliente: SupabaseClient) {
+  async obter(@ClienteSupabase() cliente: ClienteDados) {
     return paraCamelCase(await this.service.obter(cliente));
   }
 
@@ -25,7 +25,7 @@ export class ConfiguracoesController {
   // A linha de configuração cobre as abas Gerais, Município e Layout: basta Total em uma
   // delas. A separação por aba é feita na tela.
   @Permissao(['ConfiguracoesGerais', 'ConfiguracoesMunicipio', 'ConfiguracoesLayout'], 'Total')
-  async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
+  async atualizar(@ClienteSupabase() cliente: ClienteDados, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarConfiguracao, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, dados));
   }

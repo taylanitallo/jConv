@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { RelatoriosService } from './relatorios.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { PermissoesGuard } from '../../guardas/permissoes.guard';
@@ -29,7 +29,7 @@ export class RelatoriosController {
 
   @Get('convenio/:id')
   async convenio(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Param('id') id: string,
     @Res() resposta: Response,
     @Query('orientacao') orientacao?: string,
@@ -40,7 +40,7 @@ export class RelatoriosController {
 
   @Get('convenio/:id/historico')
   async historicoConvenio(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Param('id') id: string,
     @Res() resposta: Response,
     @Query('orientacao') orientacao?: string,
@@ -51,7 +51,7 @@ export class RelatoriosController {
 
   @Get('consolidado')
   async consolidado(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Res() resposta: Response,
     @Query('esfera') esfera?: string,
     @Query('orgaoConcedenteId') orgaoConcedenteId?: string,
@@ -72,7 +72,7 @@ export class RelatoriosController {
 
   @Get('dashboard')
   async dashboard(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Res() resposta: Response,
     @Query('esfera') esfera?: string,
     @Query('orgaoConcedenteId') orgaoConcedenteId?: string,

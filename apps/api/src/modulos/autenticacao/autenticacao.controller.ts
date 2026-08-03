@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import {
   esquemaLogin,
   type MapaPermissoes,
@@ -59,7 +59,7 @@ export class AutenticacaoController {
   // menu e quais botões de ação exibir. A barreira de verdade continua sendo a RLS.
   @Get('me')
   @UseGuards(AutenticacaoGuard)
-  async eu(@UsuarioAtual() usuario: { id: string; email: string }, @ClienteSupabase() cliente: SupabaseClient) {
+  async eu(@UsuarioAtual() usuario: { id: string; email: string }, @ClienteSupabase() cliente: ClienteDados) {
     const { data } = await cliente
       .from('permissoes_usuario')
       .select('modulo, nivel')

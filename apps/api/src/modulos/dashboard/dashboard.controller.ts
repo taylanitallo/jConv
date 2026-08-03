@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { DashboardService } from './dashboard.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { PermissoesGuard } from '../../guardas/permissoes.guard';
@@ -15,7 +15,7 @@ export class DashboardController {
 
   @Get()
   async obter(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Query('esfera') esfera?: string,
     @Query('orgaoConcedenteId') orgaoConcedenteId?: string,
     @Query('statusGeral') statusGeral?: string,

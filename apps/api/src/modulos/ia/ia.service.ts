@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import {
   ROTULOS_ESFERA_CONVENIO,
   ROTULOS_STATUS_GERAL_CONVENIO,
@@ -35,7 +36,7 @@ export class IaService {
   ) {}
 
   // Falha na leitura não deve derrubar o assistente: cai num rótulo genérico.
-  private async prompt(cliente: SupabaseClient) {
+  private async prompt(cliente: ClienteDados) {
     try {
       const c = await this.configuracoesSistema.obter(cliente);
       const orgao = c.orgao_gestor?.trim() || `Prefeitura Municipal de ${c.municipio_nome}`;
@@ -55,7 +56,7 @@ export class IaService {
     return new Anthropic({ apiKey: chave });
   }
 
-  private async montarTabelaConvenios(cliente: SupabaseClient): Promise<string> {
+  private async montarTabelaConvenios(cliente: ClienteDados): Promise<string> {
     const convenios = desembrulhar<any[]>(
       await cliente
         .from('convenios')
@@ -88,7 +89,7 @@ export class IaService {
     ].join('\n');
   }
 
-  async perguntar(cliente: SupabaseClient, pergunta: string): Promise<string> {
+  async perguntar(cliente: ClienteDados, pergunta: string): Promise<string> {
     const anthropic = this.obterCliente();
     const tabela = await this.montarTabelaConvenios(cliente);
 
@@ -108,7 +109,7 @@ export class IaService {
     return resposta.content.find((b) => b.type === 'text')?.text ?? '';
   }
 
-  async resumoConvenio(cliente: SupabaseClient, convenioId: string): Promise<string> {
+  async resumoConvenio(cliente: ClienteDados, convenioId: string): Promise<string> {
     const anthropic = this.obterCliente();
     const convenio = desembrulhar(
       await cliente.from('convenios').select('*').eq('id', convenioId).single(),
@@ -144,7 +145,7 @@ export class IaService {
     return resposta.content.find((b) => b.type === 'text')?.text ?? '';
   }
 
-  async resumoGeral(cliente: SupabaseClient, filtros: FiltrosDashboard): Promise<string> {
+  async resumoGeral(cliente: ClienteDados, filtros: FiltrosDashboard): Promise<string> {
     const anthropic = this.obterCliente();
     const dados = await this.dashboardService.obterDados(cliente, filtros);
 
@@ -160,7 +161,8 @@ export class IaService {
   }
 
   async extrairDocumento(
-    cliente: SupabaseClient,
+    cliente: ClienteDados,
+    armazenamento: SupabaseClient,
     documentoId: string,
   ): Promise<Record<string, unknown>> {
     const anthropic = this.obterCliente();
@@ -168,7 +170,7 @@ export class IaService {
       await cliente.from('documentos_anexos').select('*').eq('id', documentoId).single(),
     ) as Record<string, any>;
 
-    const { data: arquivo, error } = await cliente.storage
+    const { data: arquivo, error } = await armazenamento.storage
       .from('documentos-anexos')
       .download(documento.arquivo_caminho);
     if (error || !arquivo) {

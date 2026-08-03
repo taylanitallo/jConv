@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarAditivo, CriarAditivo } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
 @Injectable()
 export class AditivosService {
-  async listar(cliente: SupabaseClient, convenioId: string) {
+  async listar(cliente: ClienteDados, convenioId: string) {
     return desembrulhar(
       await cliente.from('aditivos').select('*').eq('convenio_id', convenioId).order('data', { ascending: false }),
     );
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarAditivo) {
+  async criar(cliente: ClienteDados, dados: CriarAditivo) {
     return desembrulhar(
       await cliente
         .from('aditivos')
@@ -21,7 +21,7 @@ export class AditivosService {
     );
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarAditivo) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarAditivo) {
     const payload: Record<string, unknown> = {};
     if (dados.tipo !== undefined) payload.tipo = dados.tipo;
     if (dados.data !== undefined) payload.data = dados.data;
@@ -30,7 +30,7 @@ export class AditivosService {
     return desembrulhar(await cliente.from('aditivos').update(payload).eq('id', id).select().single());
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, id: string) {
     desembrulhar(await cliente.from('aditivos').delete().eq('id', id));
   }
 }

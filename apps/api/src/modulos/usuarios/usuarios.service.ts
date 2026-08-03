@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarUsuario, CriarUsuario, DefinirPermissoes } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 import { SUPABASE_ADMIN_CLIENT } from '../../configuracao/supabase.provider';
@@ -8,17 +9,17 @@ import { SUPABASE_ADMIN_CLIENT } from '../../configuracao/supabase.provider';
 export class UsuariosService {
   constructor(@Inject(SUPABASE_ADMIN_CLIENT) private readonly supabaseAdmin: SupabaseClient) {}
 
-  async listar(cliente: SupabaseClient) {
+  async listar(cliente: ClienteDados) {
     return desembrulhar(await cliente.from('usuarios').select('*').order('nome'));
   }
 
-  async obter(cliente: SupabaseClient, id: string) {
+  async obter(cliente: ClienteDados, id: string) {
     return desembrulhar(await cliente.from('usuarios').select('*').eq('id', id).single());
   }
 
   // Cria o usuário no Supabase Auth via convite por e-mail (nunca geramos/vemos senha aqui —
   // o próprio usuário define pelo link recebido) e já grava o perfil em public.usuarios.
-  async criar(cliente: SupabaseClient, dados: CriarUsuario) {
+  async criar(cliente: ClienteDados, dados: CriarUsuario) {
     const { data: convite, error: erroConvite } = await this.supabaseAdmin.auth.admin.inviteUserByEmail(dados.email);
     if (erroConvite) throw erroConvite;
 
@@ -37,7 +38,7 @@ export class UsuariosService {
     );
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarUsuario) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarUsuario) {
     const payload: Record<string, unknown> = {};
     if (dados.nome !== undefined) payload.nome = dados.nome;
     if (dados.ativo !== undefined) payload.ativo = dados.ativo;
@@ -50,7 +51,7 @@ export class UsuariosService {
     return desembrulhar(await cliente.from('usuarios').update(payload).eq('id', id).select().single());
   }
 
-  async listarPermissoes(cliente: SupabaseClient, usuarioId: string) {
+  async listarPermissoes(cliente: ClienteDados, usuarioId: string) {
     return desembrulhar(
       await cliente.from('permissoes_usuario').select('modulo, nivel').eq('usuario_id', usuarioId),
     );
@@ -58,7 +59,7 @@ export class UsuariosService {
 
   // A janela de Atribuicoes sempre envia todos os modulos, entao substituimos o conjunto
   // inteiro em vez de reconciliar diferenca a diferenca.
-  async definirPermissoes(cliente: SupabaseClient, usuarioId: string, dados: DefinirPermissoes) {
+  async definirPermissoes(cliente: ClienteDados, usuarioId: string, dados: DefinirPermissoes) {
     desembrulhar(await cliente.from('permissoes_usuario').delete().eq('usuario_id', usuarioId));
 
     const aGravar = dados.permissoes.filter((p) => p.nivel !== 'Nenhuma');

@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfiguracaoModule } from './configuracao/configuracao.module';
+import { BancoModule } from './banco/banco.module';
+import { TenantMiddleware } from './banco/tenant.middleware';
 import { AutenticacaoModule } from './modulos/autenticacao/autenticacao.module';
 import { UsuariosModule } from './modulos/usuarios/usuarios.module';
 import { OrgaosConcedentesModule } from './modulos/orgaos-concedentes/orgaos-concedentes.module';
@@ -20,6 +22,7 @@ import { ConfiguracoesModuloModule } from './modulos/configuracoes/configuracoes
   imports: [
     ScheduleModule.forRoot(),
     ConfiguracaoModule,
+    BancoModule,
     AutenticacaoModule,
     UsuariosModule,
     OrgaosConcedentesModule,
@@ -36,4 +39,13 @@ import { ConfiguracoesModuloModule } from './modulos/configuracoes/configuracoes
     ConfiguracoesModuloModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumidor: MiddlewareConsumer) {
+    // Login e logout acontecem antes de qualquer escolha de município e falam só com o Supabase
+    // Auth; o resto da API é sempre dentro de um município.
+    consumidor
+      .apply(TenantMiddleware)
+      .exclude('auth/login', 'auth/logout', 'saude')
+      .forRoutes('*');
+  }
+}

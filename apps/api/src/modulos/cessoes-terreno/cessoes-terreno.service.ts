@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarCessaoTerreno, CriarCessaoTerreno } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
 @Injectable()
 export class CessoesTerrenoService {
-  async listar(cliente: SupabaseClient) {
+  async listar(cliente: ClienteDados) {
     return desembrulhar(await cliente.from('cessoes_terreno').select('*').order('criado_em', { ascending: false }));
   }
 
-  async obter(cliente: SupabaseClient, id: string) {
+  async obter(cliente: ClienteDados, id: string) {
     return desembrulhar(await cliente.from('cessoes_terreno').select('*').eq('id', id).single());
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarCessaoTerreno) {
+  async criar(cliente: ClienteDados, dados: CriarCessaoTerreno) {
     return desembrulhar(
       await cliente
         .from('cessoes_terreno')
@@ -31,7 +31,7 @@ export class CessoesTerrenoService {
     );
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarCessaoTerreno) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarCessaoTerreno) {
     const payload: Record<string, unknown> = {};
     if (dados.orgaoConcedenteId !== undefined) payload.orgao_concedente_id = dados.orgaoConcedenteId;
     if (dados.objeto !== undefined) payload.objeto = dados.objeto;
@@ -44,7 +44,7 @@ export class CessoesTerrenoService {
     return desembrulhar(await cliente.from('cessoes_terreno').update(payload).eq('id', id).select().single());
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, id: string) {
     desembrulhar(await cliente.from('cessoes_terreno').delete().eq('id', id));
   }
 }

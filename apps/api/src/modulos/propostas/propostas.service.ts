@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarProposta, CriarProposta, PromoverPropostaParaConvenio } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
 @Injectable()
 export class PropostasService {
-  async listar(cliente: SupabaseClient) {
+  async listar(cliente: ClienteDados) {
     return desembrulhar(await cliente.from('propostas').select('*').order('criado_em', { ascending: false }));
   }
 
-  async obter(cliente: SupabaseClient, id: string) {
+  async obter(cliente: ClienteDados, id: string) {
     return desembrulhar(await cliente.from('propostas').select('*').eq('id', id).single());
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarProposta) {
+  async criar(cliente: ClienteDados, dados: CriarProposta) {
     return desembrulhar(
       await cliente
         .from('propostas')
@@ -30,7 +30,7 @@ export class PropostasService {
     );
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarProposta) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarProposta) {
     const payload: Record<string, unknown> = {};
     if (dados.orgaoConcedenteId !== undefined) payload.orgao_concedente_id = dados.orgaoConcedenteId;
     if (dados.objeto !== undefined) payload.objeto = dados.objeto;
@@ -42,11 +42,11 @@ export class PropostasService {
     return desembrulhar(await cliente.from('propostas').update(payload).eq('id', id).select().single());
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, id: string) {
     desembrulhar(await cliente.from('propostas').delete().eq('id', id));
   }
 
-  async promover(cliente: SupabaseClient, propostaId: string, dados: PromoverPropostaParaConvenio) {
+  async promover(cliente: ClienteDados, propostaId: string, dados: PromoverPropostaParaConvenio) {
     const { data, error } = await cliente.rpc('promover_proposta_para_convenio', {
       p_proposta_id: propostaId,
       p_tipo_instrumento: dados.tipoInstrumento,

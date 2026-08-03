@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { MapaPermissoes } from '@jconv/compartilhado';
 
 const URL_BASE_API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -30,9 +30,12 @@ export class ErroApiIndisponivel extends Error {
 export async function obterUsuarioAtual(): Promise<SessaoAtual | null> {
   let resposta: Response;
 
+  // O slug vem do cabeçalho que o middleware injetou a partir do primeiro segmento da URL.
+  const municipio = headers().get('x-municipio') ?? '';
+
   try {
     resposta = await fetch(`${URL_BASE_API}/auth/me`, {
-      headers: { Cookie: cookies().toString() },
+      headers: { Cookie: cookies().toString(), 'x-municipio': municipio },
       cache: 'no-store',
     });
   } catch (causa) {

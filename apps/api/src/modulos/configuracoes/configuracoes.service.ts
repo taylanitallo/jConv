@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarConfiguracao } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
@@ -45,11 +45,11 @@ export interface LinhaConfiguracao {
 // Linha única (ver migration 0024): não há criar nem excluir, só ler e atualizar.
 @Injectable()
 export class ConfiguracoesService {
-  async obter(cliente: SupabaseClient): Promise<LinhaConfiguracao> {
+  async obter(cliente: ClienteDados): Promise<LinhaConfiguracao> {
     return desembrulhar<LinhaConfiguracao>(await cliente.from('configuracoes').select('*').single());
   }
 
-  async atualizar(cliente: SupabaseClient, dados: AtualizarConfiguracao) {
+  async atualizar(cliente: ClienteDados, dados: AtualizarConfiguracao) {
     const payload: Record<string, unknown> = {};
     for (const [chaveCamel, chaveSnake] of Object.entries(MAPA_COLUNAS)) {
       const valor = (dados as Record<string, unknown>)[chaveCamel];

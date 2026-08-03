@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarConvenio, CriarConvenio } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
@@ -53,7 +53,7 @@ export interface FiltrosConvenio {
 
 @Injectable()
 export class ConveniosService {
-  async listar(cliente: SupabaseClient, filtros: FiltrosConvenio) {
+  async listar(cliente: ClienteDados, filtros: FiltrosConvenio) {
     let consulta = cliente.from('convenios').select('*').order('criado_em', { ascending: false });
     if (filtros.esfera) consulta = consulta.eq('esfera', filtros.esfera);
     if (filtros.orgaoConcedenteId) consulta = consulta.eq('orgao_concedente_id', filtros.orgaoConcedenteId);
@@ -62,19 +62,19 @@ export class ConveniosService {
     return desembrulhar(await consulta);
   }
 
-  async obter(cliente: SupabaseClient, id: string) {
+  async obter(cliente: ClienteDados, id: string) {
     return desembrulhar(await cliente.from('convenios').select('*').eq('id', id).single());
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarConvenio) {
+  async criar(cliente: ClienteDados, dados: CriarConvenio) {
     return desembrulhar(await cliente.from('convenios').insert(paraPayload(dados)).select().single());
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarConvenio) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarConvenio) {
     return desembrulhar(await cliente.from('convenios').update(paraPayload(dados)).eq('id', id).select().single());
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, id: string) {
     desembrulhar(await cliente.from('convenios').delete().eq('id', id));
   }
 }

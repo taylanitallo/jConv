@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { desembrulhar } from '../../comum/supabase-erro';
 
 export interface FiltrosDashboard {
@@ -52,7 +52,7 @@ function diasEntre(hoje: Date, dataIso: string) {
 
 @Injectable()
 export class DashboardService {
-  async obterDados(cliente: SupabaseClient, filtros: FiltrosDashboard) {
+  async obterDados(cliente: ClienteDados, filtros: FiltrosDashboard) {
     let consulta = cliente
       .from('convenios')
       .select(

@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarLimiteCusteio, CriarLimiteCusteio } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
 @Injectable()
 export class LimitesCusteioService {
-  async listar(cliente: SupabaseClient) {
+  async listar(cliente: ClienteDados) {
     return desembrulhar(
       await cliente.from('limites_custeio').select('*').order('competencia_ano', { ascending: false }),
     );
   }
 
-  async obter(cliente: SupabaseClient, id: string) {
+  async obter(cliente: ClienteDados, id: string) {
     return desembrulhar(await cliente.from('limites_custeio').select('*').eq('id', id).single());
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarLimiteCusteio) {
+  async criar(cliente: ClienteDados, dados: CriarLimiteCusteio) {
     return desembrulhar(
       await cliente
         .from('limites_custeio')
@@ -33,7 +33,7 @@ export class LimitesCusteioService {
     );
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarLimiteCusteio) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarLimiteCusteio) {
     const payload: Record<string, unknown> = {};
     if (dados.orgaoConcedenteId !== undefined) payload.orgao_concedente_id = dados.orgaoConcedenteId;
     if (dados.tipo !== undefined) payload.tipo = dados.tipo;
@@ -46,7 +46,7 @@ export class LimitesCusteioService {
     return desembrulhar(await cliente.from('limites_custeio').update(payload).eq('id', id).select().single());
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, id: string) {
     desembrulhar(await cliente.from('limites_custeio').delete().eq('id', id));
   }
 }

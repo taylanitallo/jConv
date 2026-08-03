@@ -1,4 +1,11 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { NivelPermissao, ROTULOS_MODULO_SISTEMA, podeEditar, podeVer } from '@jconv/compartilhado';
@@ -24,7 +31,7 @@ export class PermissoesGuard implements CanActivate {
     }
 
     const requisicao = contexto.switchToHttp().getRequest<Request>();
-    const cliente = requisicao.supabaseClienteUsuario;
+    const cliente = requisicao.sessaoTenant?.cliente;
     const usuarioId = requisicao.usuarioAutenticado?.id;
 
     if (!cliente || !usuarioId) {
@@ -41,16 +48,23 @@ export class PermissoesGuard implements CanActivate {
       throw new ForbiddenException('Usuário sem acesso ao sistema');
     }
 
-    const { data } = await cliente
+    const { data, error } = await cliente
       .from('permissoes_usuario')
       .select('modulo, nivel')
       .eq('usuario_id', usuarioId)
       .in('modulo', exigida.modulos);
 
+    // Consulta que falha não é "usuário sem permissão": tratar as duas coisas igual transforma
+    // qualquer defeito na camada de dados num 403 convincente e muito difícil de rastrear.
+    if (error) {
+      throw new InternalServerErrorException(`Falha ao consultar permissões: ${error.message}`);
+    }
+
     // Ausência de linha equivale a 'Nenhuma' (mesma regra da função no banco).
     const suficiente = (nivel: NivelPermissao) =>
       exigida.nivel === 'Total' ? podeEditar(nivel) : podeVer(nivel);
-    const permitido = (data ?? []).some((linha) => suficiente(linha.nivel as NivelPermissao));
+    const linhas = (data ?? []) as { modulo: string; nivel: string }[];
+    const permitido = linhas.some((linha) => suficiente(linha.nivel as NivelPermissao));
 
     if (!permitido) {
       const rotulos = exigida.modulos.map((m) => ROTULOS_MODULO_SISTEMA[m]).join(' ou ');

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaAtualizarLimiteCusteio, esquemaCriarLimiteCusteio } from '@jconv/compartilhado';
 import { LimitesCusteioService } from './limites-custeio.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -16,32 +16,32 @@ export class LimitesCusteioController {
   constructor(private readonly service: LimitesCusteioService) {}
 
   @Get()
-  async listar(@ClienteSupabase() cliente: SupabaseClient) {
+  async listar(@ClienteSupabase() cliente: ClienteDados) {
     return paraCamelCase(await this.service.listar(cliente));
   }
 
   @Get(':id')
-  async obter(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async obter(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     return paraCamelCase(await this.service.obter(cliente, id));
   }
 
   @Post()
   @Permissao('LimitesCusteio', 'Total')
-  async criar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
+  async criar(@ClienteSupabase() cliente: ClienteDados, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaCriarLimiteCusteio, corpo);
     return paraCamelCase(await this.service.criar(cliente, dados));
   }
 
   @Patch(':id')
   @Permissao('LimitesCusteio', 'Total')
-  async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
+  async atualizar(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarLimiteCusteio, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Delete(':id')
   @Permissao('LimitesCusteio', 'Total')
-  async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async excluir(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };
   }

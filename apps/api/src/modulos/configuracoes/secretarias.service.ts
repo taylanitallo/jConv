@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { AtualizarSecretaria, CriarSecretaria } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
 @Injectable()
 export class SecretariasService {
-  async listar(cliente: SupabaseClient) {
+  async listar(cliente: ClienteDados) {
     return desembrulhar(await cliente.from('secretarias').select('*').order('nome'));
   }
 
-  async obter(cliente: SupabaseClient, id: string) {
+  async obter(cliente: ClienteDados, id: string) {
     return desembrulhar(await cliente.from('secretarias').select('*').eq('id', id).single());
   }
 
-  async listarOrgaos(cliente: SupabaseClient, secretariaId: string) {
+  async listarOrgaos(cliente: ClienteDados, secretariaId: string) {
     return desembrulhar(
       await cliente.from('secretarias_orgaos').select('orgao_concedente_id').eq('secretaria_id', secretariaId),
     );
   }
 
-  async criar(cliente: SupabaseClient, dados: CriarSecretaria) {
+  async criar(cliente: ClienteDados, dados: CriarSecretaria) {
     const secretaria = desembrulhar<{ id: string }>(
       await cliente
         .from('secretarias')
@@ -41,7 +41,7 @@ export class SecretariasService {
     return secretaria;
   }
 
-  async atualizar(cliente: SupabaseClient, id: string, dados: AtualizarSecretaria) {
+  async atualizar(cliente: ClienteDados, id: string, dados: AtualizarSecretaria) {
     const payload: Record<string, unknown> = {};
     if (dados.nome !== undefined) payload.nome = dados.nome;
     if (dados.sigla !== undefined) payload.sigla = dados.sigla;
@@ -61,13 +61,13 @@ export class SecretariasService {
     return secretaria;
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, id: string) {
     desembrulhar(await cliente.from('secretarias').delete().eq('id', id));
   }
 
   // Substitui o conjunto inteiro de órgãos da secretaria: é este vínculo que o RLS consulta
   // para decidir o que o LeituraSecretario enxerga.
-  private async sincronizarOrgaos(cliente: SupabaseClient, secretariaId: string, orgaosIds: string[]) {
+  private async sincronizarOrgaos(cliente: ClienteDados, secretariaId: string, orgaosIds: string[]) {
     desembrulhar(await cliente.from('secretarias_orgaos').delete().eq('secretaria_id', secretariaId));
     if (orgaosIds.length > 0) {
       desembrulhar(

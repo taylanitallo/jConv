@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaCriarObservacaoConvenio } from '@jconv/compartilhado';
 import { ObservacoesService } from './observacoes.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -17,7 +17,7 @@ export class ObservacoesController {
   constructor(private readonly service: ObservacoesService) {}
 
   @Get()
-  async listar(@ClienteSupabase() cliente: SupabaseClient, @Param('convenioId') convenioId: string) {
+  async listar(@ClienteSupabase() cliente: ClienteDados, @Param('convenioId') convenioId: string) {
     return paraCamelCase(await this.service.listar(cliente, convenioId));
   }
 
@@ -25,7 +25,7 @@ export class ObservacoesController {
   @Post()
   @Permissao('Convenios', 'Total')
   async criar(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @UsuarioAtual() usuario: { id: string; email: string },
     @Param('convenioId') convenioId: string,
     @Body() corpo: unknown,

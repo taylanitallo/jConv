@@ -31,10 +31,13 @@ export class AutenticacaoGuard implements CanActivate {
     }
 
     requisicao.usuarioAutenticado = { id: data.user.id, email: data.user.email ?? '' };
-    requisicao.supabaseClienteUsuario = createClient(this.configuracao.supabaseUrl, this.configuracao.supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+
+    // A conexão do município já está aberta (TenantMiddleware) operando como "authenticated"
+    // sem usuário — ou seja, negando tudo. Só agora, com o cookie conferido, os claims entram
+    // e auth.uid() passa a responder dentro das policies.
+    if (requisicao.sessaoTenant) {
+      await requisicao.sessaoTenant.autenticarComo(data.user.id);
+    }
 
     return true;
   }

@@ -1,9 +1,9 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { DashboardService } from './dashboard.service';
 
-// Cliente Supabase mínimo: cada tabela devolve as linhas fixas do teste, ignorando os
+// Cliente de dados mínimo: cada tabela devolve as linhas fixas do teste, ignorando os
 // encadeamentos de filtro (eq/in/gte/lte), que aqui não precisam ser exercitados.
-function clienteFalso(tabelas: Record<string, unknown[]>): SupabaseClient {
+function clienteFalso(tabelas: Record<string, unknown[]>): ClienteDados {
   return {
     from(tabela: string) {
       const resultado = Promise.resolve({ data: tabelas[tabela] ?? [], error: null });
@@ -16,7 +16,7 @@ function clienteFalso(tabelas: Record<string, unknown[]>): SupabaseClient {
       }
       return encadeavel;
     },
-  } as unknown as SupabaseClient;
+  } as unknown as ClienteDados;
 }
 
 function emDias(dias: number) {

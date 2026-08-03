@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaAtualizarMedicao, esquemaCriarMedicao } from '@jconv/compartilhado';
 import { MedicoesService } from './medicoes.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -16,14 +16,14 @@ export class MedicoesController {
   constructor(private readonly service: MedicoesService) {}
 
   @Get()
-  async listar(@ClienteSupabase() cliente: SupabaseClient, @Param('convenioId') convenioId: string) {
+  async listar(@ClienteSupabase() cliente: ClienteDados, @Param('convenioId') convenioId: string) {
     return paraCamelCase(await this.service.listar(cliente, convenioId));
   }
 
   @Post()
   @Permissao('Convenios', 'Total')
   async criar(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Param('convenioId') convenioId: string,
     @Body() corpo: unknown,
   ) {
@@ -33,14 +33,14 @@ export class MedicoesController {
 
   @Patch(':id')
   @Permissao('Convenios', 'Total')
-  async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
+  async atualizar(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarMedicao, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Delete(':id')
   @Permissao('Convenios', 'Total')
-  async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async excluir(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     await this.service.excluir(cliente, id);
     return { sucesso: true };
   }

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { CriarDocumentoAnexo } from '@jconv/compartilhado';
 import { desembrulhar } from '../../comum/supabase-erro';
 
@@ -14,7 +15,7 @@ export interface FiltrosDocumentoAnexo {
 
 @Injectable()
 export class DocumentosAnexosService {
-  async listar(cliente: SupabaseClient, filtros: FiltrosDocumentoAnexo) {
+  async listar(cliente: ClienteDados, filtros: FiltrosDocumentoAnexo) {
     let consulta = cliente.from('documentos_anexos').select('*').order('data_upload', { ascending: false });
     if (filtros.convenioId) consulta = consulta.eq('convenio_id', filtros.convenioId);
     if (filtros.propostaId) consulta = consulta.eq('proposta_id', filtros.propostaId);
@@ -25,14 +26,16 @@ export class DocumentosAnexosService {
   // Gera uma URL assinada de upload direto para o Supabase Storage (o navegador envia o
   // arquivo direto pro Storage; a API só registra o metadado depois, evitando passar o
   // binário do arquivo pelo NestJS).
-  async criarUploadAssinado(cliente: SupabaseClient, nomeArquivo: string) {
-    const caminho = `${randomUUID()}-${nomeArquivo}`;
-    const { data, error } = await cliente.storage.from(BUCKET_DOCUMENTOS).createSignedUploadUrl(caminho);
+  async criarUploadAssinado(armazenamento: SupabaseClient, slugMunicipio: string, nomeArquivo: string) {
+    // Prefixo do município na chave: os buckets são compartilhados entre clientes, então é o
+    // caminho que separa os arquivos de uma prefeitura dos da outra.
+    const caminho = `${slugMunicipio}/${randomUUID()}-${nomeArquivo}`;
+    const { data, error } = await armazenamento.storage.from(BUCKET_DOCUMENTOS).createSignedUploadUrl(caminho);
     if (error) throw error;
     return { caminho, urlAssinada: data.signedUrl, token: data.token };
   }
 
-  async registrarDocumento(cliente: SupabaseClient, dados: CriarDocumentoAnexo) {
+  async registrarDocumento(cliente: ClienteDados, dados: CriarDocumentoAnexo) {
     return desembrulhar(
       await cliente
         .from('documentos_anexos')
@@ -49,24 +52,24 @@ export class DocumentosAnexosService {
     );
   }
 
-  async obterUrlDownload(cliente: SupabaseClient, id: string) {
+  async obterUrlDownload(cliente: ClienteDados, armazenamento: SupabaseClient, id: string) {
     const documento = desembrulhar(
       await cliente.from('documentos_anexos').select('arquivo_caminho').eq('id', id).single(),
     ) as { arquivo_caminho: string };
 
-    const { data, error } = await cliente.storage
+    const { data, error } = await armazenamento.storage
       .from(BUCKET_DOCUMENTOS)
       .createSignedUrl(documento.arquivo_caminho, 60 * 5);
     if (error) throw error;
     return { url: data.signedUrl };
   }
 
-  async excluir(cliente: SupabaseClient, id: string) {
+  async excluir(cliente: ClienteDados, armazenamento: SupabaseClient, id: string) {
     const documento = desembrulhar(
       await cliente.from('documentos_anexos').select('arquivo_caminho').eq('id', id).single(),
     ) as { arquivo_caminho: string };
 
-    await cliente.storage.from(BUCKET_DOCUMENTOS).remove([documento.arquivo_caminho]);
+    await armazenamento.storage.from(BUCKET_DOCUMENTOS).remove([documento.arquivo_caminho]);
     desembrulhar(await cliente.from('documentos_anexos').delete().eq('id', id));
   }
 }

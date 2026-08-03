@@ -1,11 +1,17 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaCriarDocumentoAnexo } from '@jconv/compartilhado';
 import { DocumentosAnexosService } from './documentos-anexos.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
 import { PermissoesGuard } from '../../guardas/permissoes.guard';
 import { Permissao } from '../../comum/decoradores/permissao.decorator';
-import { ClienteSupabase } from '../../comum/decoradores/cliente-supabase.decorator';
+import {
+  ArmazenamentoSupabase,
+  ClienteSupabase,
+  MunicipioAtual,
+} from '../../comum/decoradores/cliente-supabase.decorator';
+import { ClienteMunicipio } from '../../banco/banco.service';
 import { validarComEsquema } from '../../comum/validar';
 import { paraCamelCase } from '../../comum/mapeadores';
 
@@ -17,7 +23,7 @@ export class DocumentosAnexosController {
 
   @Get()
   async listar(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Query('convenioId') convenioId?: string,
     @Query('propostaId') propostaId?: string,
     @Query('cessaoTerrenoId') cessaoTerrenoId?: string,
@@ -27,29 +33,41 @@ export class DocumentosAnexosController {
 
   @Post('upload-assinado')
   @Permissao('Convenios', 'Total')
-  async criarUploadAssinado(@ClienteSupabase() cliente: SupabaseClient, @Body('nomeArquivo') nomeArquivo: unknown) {
+  async criarUploadAssinado(
+    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
+    @MunicipioAtual() municipio: ClienteMunicipio,
+    @Body('nomeArquivo') nomeArquivo: unknown,
+  ) {
     if (typeof nomeArquivo !== 'string' || !nomeArquivo.trim()) {
       throw new BadRequestException('Informe o nome do arquivo');
     }
-    return this.service.criarUploadAssinado(cliente, nomeArquivo);
+    return this.service.criarUploadAssinado(armazenamento, municipio.slug, nomeArquivo);
   }
 
   @Post()
   @Permissao('Convenios', 'Total')
-  async registrar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
+  async registrar(@ClienteSupabase() cliente: ClienteDados, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaCriarDocumentoAnexo, corpo);
     return paraCamelCase(await this.service.registrarDocumento(cliente, dados));
   }
 
   @Get(':id/download')
-  async obterUrlDownload(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
-    return this.service.obterUrlDownload(cliente, id);
+  async obterUrlDownload(
+    @ClienteSupabase() cliente: ClienteDados,
+    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
+    @Param('id') id: string,
+  ) {
+    return this.service.obterUrlDownload(cliente, armazenamento, id);
   }
 
   @Delete(':id')
   @Permissao('Convenios', 'Total')
-  async excluir(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
-    await this.service.excluir(cliente, id);
+  async excluir(
+    @ClienteSupabase() cliente: ClienteDados,
+    @ArmazenamentoSupabase() armazenamento: SupabaseClient,
+    @Param('id') id: string,
+  ) {
+    await this.service.excluir(cliente, armazenamento, id);
     return { sucesso: true };
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import {
   ROTULOS_ESFERA_CONVENIO,
   ROTULOS_STATUS_GERAL_CONVENIO,
@@ -34,7 +34,7 @@ export class RelatoriosService {
 
   // Cabeçalho e rodapé de todo relatório vêm das Configurações. Falha na leitura não derruba o
   // relatório: cai no cabeçalho padrão.
-  private async cabecalho(cliente: SupabaseClient) {
+  private async cabecalho(cliente: ClienteDados) {
     try {
       const c = await this.configuracoesService.obter(cliente);
       return {
@@ -49,7 +49,7 @@ export class RelatoriosService {
   }
 
   async relatorioConvenio(
-    cliente: SupabaseClient,
+    cliente: ClienteDados,
     convenioId: string,
     orientacao: OrientacaoPdf = 'retrato',
   ): Promise<PDFKit.PDFDocument> {
@@ -165,7 +165,7 @@ export class RelatoriosService {
   }
 
   async relatorioHistoricoConvenio(
-    cliente: SupabaseClient,
+    cliente: ClienteDados,
     convenioId: string,
     orientacao: OrientacaoPdf = 'retrato',
   ): Promise<PDFKit.PDFDocument> {
@@ -213,7 +213,7 @@ export class RelatoriosService {
   }
 
   async relatorioConvenios(
-    cliente: SupabaseClient,
+    cliente: ClienteDados,
     filtros: FiltrosDashboard,
     titulo: string,
     orientacao: OrientacaoPdf = 'retrato',
@@ -269,7 +269,7 @@ export class RelatoriosService {
   }
 
   async relatorioDashboard(
-    cliente: SupabaseClient,
+    cliente: ClienteDados,
     filtros: FiltrosDashboard,
     orientacao: OrientacaoPdf = 'retrato',
   ): Promise<PDFKit.PDFDocument> {

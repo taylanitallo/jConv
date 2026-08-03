@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { ClienteDados } from '../../banco/cliente-dados';
 import { esquemaAtualizarUsuario, esquemaCriarUsuario, esquemaDefinirPermissoes } from '@jconv/compartilhado';
 import { UsuariosService } from './usuarios.service';
 import { AutenticacaoGuard } from '../../guardas/autenticacao.guard';
@@ -18,12 +18,12 @@ export class UsuariosController {
   constructor(private readonly service: UsuariosService) {}
 
   @Get()
-  async listar(@ClienteSupabase() cliente: SupabaseClient) {
+  async listar(@ClienteSupabase() cliente: ClienteDados) {
     return paraCamelCase(await this.service.listar(cliente));
   }
 
   @Get(':id')
-  async obter(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async obter(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     return paraCamelCase(await this.service.obter(cliente, id));
   }
 
@@ -32,27 +32,27 @@ export class UsuariosController {
 
   @Post()
   @Permissao('Usuarios', 'Total')
-  async criar(@ClienteSupabase() cliente: SupabaseClient, @Body() corpo: unknown) {
+  async criar(@ClienteSupabase() cliente: ClienteDados, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaCriarUsuario, corpo);
     return paraCamelCase(await this.service.criar(cliente, dados));
   }
 
   @Patch(':id')
   @Permissao('Usuarios', 'Total')
-  async atualizar(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string, @Body() corpo: unknown) {
+  async atualizar(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string, @Body() corpo: unknown) {
     const dados = validarComEsquema(esquemaAtualizarUsuario, corpo);
     return paraCamelCase(await this.service.atualizar(cliente, id, dados));
   }
 
   @Get(':id/permissoes')
-  async listarPermissoes(@ClienteSupabase() cliente: SupabaseClient, @Param('id') id: string) {
+  async listarPermissoes(@ClienteSupabase() cliente: ClienteDados, @Param('id') id: string) {
     return paraCamelCase(await this.service.listarPermissoes(cliente, id));
   }
 
   @Put(':id/permissoes')
   @Permissao('Usuarios', 'Total')
   async definirPermissoes(
-    @ClienteSupabase() cliente: SupabaseClient,
+    @ClienteSupabase() cliente: ClienteDados,
     @Param('id') id: string,
     @Body() corpo: unknown,
   ) {
