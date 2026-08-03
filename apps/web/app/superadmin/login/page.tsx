@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { chamarSuperadmin } from '@/lib/api/superadmin';
+import { AVISO_ERRO, BOTAO_PRIMARIO, CAMPO, CARTAO, ROTULO } from '../_componentes/estilos';
 
 // Entrada própria da administração: ela não pertence a município nenhum, então não passa pela
 // tela de login de nenhuma prefeitura.
@@ -31,7 +32,7 @@ export default function PaginaLoginSuperadmin() {
     <div className="flex min-h-screen items-center justify-center bg-neutral-100 px-4 dark:bg-neutral-950">
       <form
         onSubmit={entrar}
-        className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+        className={`${CARTAO} w-full max-w-sm`}
       >
         <div className="mb-6 flex items-baseline gap-2">
           <span className="text-lg font-semibold">jConv</span>
@@ -40,35 +41,35 @@ export default function PaginaLoginSuperadmin() {
           </span>
         </div>
 
-        {erro && <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>}
+        {erro && <p className={AVISO_ERRO}>{erro}</p>}
 
-        <label className="mb-3 block text-sm">
-          <span className="mb-1 block font-medium">E-mail</span>
+        <label className="mb-4 block">
+          <span className={ROTULO}>E-mail</span>
           <input
             type="email"
             required
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+            className={CAMPO}
           />
         </label>
 
-        <label className="mb-5 block text-sm">
-          <span className="mb-1 block font-medium">Senha</span>
+        <label className="mb-6 block">
+          <span className={ROTULO}>Senha</span>
           <input
             type="password"
             required
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+            className={CAMPO}
           />
         </label>
 
         <button
           type="submit"
           disabled={entrando}
-          className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white"
+          className={`${BOTAO_PRIMARIO} w-full`}
         >
           {entrando ? 'Entrando…' : 'Entrar'}
         </button>
